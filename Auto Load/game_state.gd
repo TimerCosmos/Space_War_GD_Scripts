@@ -46,4 +46,10 @@ func get_drone_by_id(id: String):
 		if drone.id == id:
 			return drone
 	return null
+
+func get_ship_by_id(id: String):
+	for ship in all_ships:
+		if ship.id == id:
+			return ship
+	return null
 	

@@ -75,7 +75,13 @@ func _parse_bootstrap(data: Dictionary):
 	GameState.owned_drone_ids = []
 	for id in data.get("owned_drone_ids", []):
 		GameState.owned_drone_ids.append(str(id))
+		
+	_initialize_equipment()
 
+func _initialize_equipment():
+
+	ShipManager.selected_ship_id = GameState.user.default_spaceship_id
+	DroneManager.selected_drone_id = GameState.user.default_drone_id
 
 func _finish():
 	if _on_complete:

@@ -3,7 +3,8 @@ class_name SpaceShip
 
 signal ship_destroyed
 signal health_changed(current, max)
-
+signal damage_changed(current)
+signal drone_added(value)
 # Runtime data
 var ship_data: ShipData
 var current_health: int
@@ -84,7 +85,7 @@ func _unhandled_input(event):
 			target_tilt = 0.0
 
 	if is_holding and event is InputEventMouseMotion:
-		var new_x = global_position.x + event.relative.x * ship_data.speed * 0.01
+		var new_x = global_position.x + event.relative.x * runtime_speed * 0.01
 		new_x = clamp(new_x, ship_data.min_x, ship_data.max_x)
 		global_position.x = new_x
 
@@ -106,7 +107,7 @@ func _process(delta):
 	fire_timer -= delta
 	if fire_timer <= 0:
 		shoot()
-		fire_timer = ship_data.fire_rate
+		fire_timer = runtime_fire_rate
 
 
 # -------------------------------------------------
@@ -128,7 +129,7 @@ func add_drone(count: int):
 
 	# 1️⃣ Get selected drone ID from DroneManager
 	var drone_id = DroneManager.selected_drone_id
-
+	
 	# 2️⃣ If none selected, fallback to ship default
 	if drone_id == "":
 		if ship_data.default_drone_data != null:
@@ -159,7 +160,7 @@ func add_drone(count: int):
 		drone.apply_data(resource_data, backend_drone)
 
 		drones.append(drone)
-
+	emit_signal("drone_added", count)
 
 
 
@@ -167,7 +168,7 @@ func add_drone(count: int):
 func increase_damage(amount: int):
 	bonus_damage += amount
 	runtime_damage += amount
-
+	emit_signal("damage_changed", runtime_damage)
 
 func increase_health(amount: int):
 	bonus_health += amount
@@ -181,7 +182,7 @@ func increase_health(amount: int):
 # -------------------------------------------------
 func take_damage(amount: int):
 	current_health = max(current_health - amount, 0)
-	emit_signal("health_changed", current_health, ship_data.max_health)
+	emit_signal("health_changed", current_health, runtime_max_health)
 
 
 	if current_health <= 0:

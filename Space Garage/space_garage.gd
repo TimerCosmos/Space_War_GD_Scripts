@@ -8,21 +8,6 @@ enum GarageMode { SHIPS, DRONES }
 var mode = GarageMode.SHIPS
 
 # -------------------------------------------------
-# Hardcoded paths (later DB)
-# -------------------------------------------------
-
-const SHIP_DATA_PATHS := [
-	"res://Data/destroyer.tres",
-	"res://Data/ninja.tres"
-]
-
-const DRONE_DATA_PATHS := [
-	"res://Data/Drones/TID.tres",
-	"res://Data/Drones/ninja_drone.tres"
-]
-
-
-# -------------------------------------------------
 # Runtime State
 # -------------------------------------------------
 

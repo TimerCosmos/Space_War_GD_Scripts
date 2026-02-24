@@ -29,6 +29,16 @@ func _on_health_changed(current, max):
 	if hud:
 		hud.update_health(current, max)
 
+func _on_damage_changed(damage):
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.update_damage(damage)
+		
+func _on_drone_count_change(value):
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.update_drone_count(value)
+
 func spawn_player_ship():
 	var resource_data: ShipData = ShipManager.get_selected_ship_data()
 	var player_data: Dictionary = ShipManager.get_player_ship_state()
@@ -55,7 +65,8 @@ func spawn_player_ship():
 
 	ship_instance.health_changed.connect(_on_health_changed)
 	ship_instance.ship_destroyed.connect(_on_ship_destroyed)
-
+	ship_instance.damage_changed.connect(_on_damage_changed)
+	ship_instance.drone_added.connect(_on_drone_count_change)
 	# Tell spawner who to target
 	#enemy_spawner.player = ship_instance
 
