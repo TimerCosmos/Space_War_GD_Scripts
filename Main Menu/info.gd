@@ -11,10 +11,10 @@ func _ready():
 	
 	## Should write an API call to get the user data
 	load_player_ui(
-		12,
-		100,
+		GameState.user.level,
+		GameState.user.exp,
 		500,
-		"TimerCosmos",
+		GameState.user.name,
 	    "res://assets/profile.png"
 	)
 

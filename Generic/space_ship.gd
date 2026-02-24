@@ -2,10 +2,12 @@ extends CharacterBody3D
 class_name SpaceShip
 
 signal ship_destroyed
+signal health_changed(current, max)
 
 # Runtime data
 var ship_data: ShipData
 var current_health: int
+@export var default_drone_data: DroneData
 
 @onready var muzzle: Marker3D = $Marker3D
 
@@ -18,32 +20,42 @@ var is_holding := false
 var fire_timer := 0.0
 var target_tilt := 0.0
 
+var runtime_max_health: int
+var runtime_damage: int
+var runtime_fire_rate: float
+var runtime_speed: float
 
+# Temporary bonuses (powerups)
+var bonus_damage: int = 0
+var bonus_health: int = 0
 # -------------------------------------------------
 # Apply ShipData safely (duplicate .tres)
 # -------------------------------------------------
-func apply_data(base_data: ShipData, player_data: Dictionary = {}):
-	ship_data = base_data.duplicate(true)
+func apply_data(resource_data: ShipData, backend_data: Spaceship, player_data: Dictionary = {}):
 
-	var final_health = ship_data.max_health
-	var final_fire_rate = ship_data.fire_rate
-	var final_damage = ship_data.bullet_damage
+	ship_data = resource_data.duplicate(true)
+	if backend_data == null:
+		# Preview mode – minimal setup
+		current_health = 1
+		return
+	runtime_max_health = backend_data.base_health
+	runtime_damage = backend_data.base_damage
+	runtime_fire_rate = backend_data.base_hit_rate
+	runtime_speed = backend_data.base_speed
 
+	# Persistent DB bonuses
 	if player_data.has("bonus_health"):
-		final_health += player_data["bonus_health"]
-
-	if player_data.has("bonus_fire_rate"):
-		final_fire_rate += player_data["bonus_fire_rate"]
+		runtime_max_health += player_data["bonus_health"]
 
 	if player_data.has("bonus_damage"):
-		final_damage += player_data["bonus_damage"]
+		runtime_damage += player_data["bonus_damage"]
 
-	ship_data.max_health = final_health
-	ship_data.fire_rate = final_fire_rate
-	ship_data.bullet_damage = final_damage
+	if player_data.has("bonus_fire_rate"):
+		runtime_fire_rate += player_data["bonus_fire_rate"]
 
-	current_health = final_health
-	update_health_ui()
+	current_health = runtime_max_health
+	emit_signal("health_changed", current_health, runtime_max_health)
+
 
 
 # -------------------------------------------------
@@ -113,23 +125,55 @@ func shoot():
 # Drone System
 # -------------------------------------------------
 func add_drone(count: int):
+
+	# 1️⃣ Get selected drone ID from DroneManager
+	var drone_id = DroneManager.selected_drone_id
+
+	# 2️⃣ If none selected, fallback to ship default
+	if drone_id == "":
+		if ship_data.default_drone_data != null:
+			drone_id = ship_data.default_drone_data.drone_id
+
+	if drone_id == "":
+		print("No drone selected or default available")
+		return
+
+	# 3️⃣ Get backend DTO
+	var backend_drone = GameState.get_drone_by_id(drone_id)
+	if backend_drone == null:
+		print("Backend drone not found")
+		return
+
+	# 4️⃣ Load resource from DTO
+	var resource_data: DroneData = load(backend_drone.tres_file_path)
+	if resource_data == null or resource_data.scene_path == null:
+		print("Drone resource invalid")
+		return
+
+	# 5️⃣ Spawn drones
 	for i in count:
-		var drone_scene = preload("res://Scenes/Shooters/shooter.tscn")
-		var drone = drone_scene.instantiate()
+		var drone = resource_data.scene_path.instantiate()
 		get_tree().current_scene.add_child(drone)
+
 		drone.follow_target = self
+		drone.apply_data(resource_data, backend_drone)
+
 		drones.append(drone)
 
 
 
+
+
 func increase_damage(amount: int):
-	ship_data.bullet_damage += amount
+	bonus_damage += amount
+	runtime_damage += amount
 
 
 func increase_health(amount: int):
-	ship_data.max_health += amount
+	bonus_health += amount
+	runtime_max_health += amount
 	current_health += amount
-	update_health_ui()
+	emit_signal("health_changed", current_health, runtime_max_health)
 
 
 # -------------------------------------------------
@@ -137,17 +181,11 @@ func increase_health(amount: int):
 # -------------------------------------------------
 func take_damage(amount: int):
 	current_health = max(current_health - amount, 0)
-	update_health_ui()
+	emit_signal("health_changed", current_health, ship_data.max_health)
+
 
 	if current_health <= 0:
 		die()
-
-
-func update_health_ui():
-	var hud := get_tree().get_first_node_in_group("hud")
-	if hud:
-		hud.update_health(current_health, ship_data.max_health)
-
 
 func die():
 	emit_signal("ship_destroyed")

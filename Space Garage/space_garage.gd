@@ -1,109 +1,187 @@
-# Api call is needed to get .tres files data
-
 extends Node3D
 
-# For now hardcoded (later replace with DB values)
+# -------------------------------------------------
+# Generic Garage Viewer (Ships + Drones)
+# -------------------------------------------------
+
+enum GarageMode { SHIPS, DRONES }
+var mode = GarageMode.SHIPS
+
+# -------------------------------------------------
+# Hardcoded paths (later DB)
+# -------------------------------------------------
+
 const SHIP_DATA_PATHS := [
 	"res://Data/destroyer.tres",
 	"res://Data/ninja.tres"
 ]
 
-var ships: Array[ShipData] = []
+const DRONE_DATA_PATHS := [
+	"res://Data/Drones/TID.tres",
+	"res://Data/Drones/ninja_drone.tres"
+]
+
+
+# -------------------------------------------------
+# Runtime State
+# -------------------------------------------------
+
+var items: Array = []                 # Can contain ShipData OR DroneData
 var current_index := 0
-var current_ship: SpaceShip = null
-var current_ship_data: ShipData = null
+var current_item = null     # Generic resource
+var current_preview: Node3D = null    # Instantiated 3D preview
+
 var rotation_speed := 0.005
 
-@onready var pivot: Node3D = $ShipPivot
-@onready var prev: Button = $CanvasLayer/Control/MarginContainer/ShipScrolls/Prev
-@onready var next: Button = $CanvasLayer/Control/MarginContainer/ShipScrolls/Next
-@onready var select: Button = $CanvasLayer/Control/MarginContainer/ShipScrolls/Select
 
+# -------------------------------------------------
+# Node References
+# -------------------------------------------------
+
+@onready var pivot: Node3D = $ShipPivot
+@onready var select: Button = $CanvasLayer/Control/MarginContainer/ShipScrolls/Select
+@onready var prev: Button = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/Prev
+@onready var next: Button = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/Next
+@onready var hit_points: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/VBoxContainer/Hit Points"
+@onready var damage: Label = $CanvasLayer/Control/StatsPanel/MarginContainer/VBoxContainer/Damage
+@onready var hit_rate: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/VBoxContainer/Hit Rate"
+@onready var title: Label = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/Back/Title
+@onready var animation_player: AnimationPlayer = $AnimationPlayer
+
+# -------------------------------------------------
+# Ready
+# -------------------------------------------------
 
 func _ready():
-	load_ship_data()
-	
-	if ships.is_empty():
-		push_error("No ShipData loaded")
+	load_data()
+
+	if items.is_empty():
+		push_error("No data loaded for garage")
 		return
-
-	load_ship(0)
-
-
-# ------------------------
-# Load ShipData dynamically
-# ------------------------
-func load_ship_data():
-	for path in SHIP_DATA_PATHS:
-		var data := load(path)
-		if data != null:
-			ships.append(data)
-		else:
-			push_warning("Failed to load ShipData at: " + path)
+		
+	load_item(0)
 
 
-# ------------------------
-# Ship Loading
-# ------------------------
-func load_ship(index: int):
-	if current_ship:
-		current_ship.queue_free()
+# -------------------------------------------------
+# Load Data (Ships or Drones)
+# -------------------------------------------------
 
-	current_ship_data = ships[index]
+func load_data():
+	items.clear()
 
-	if current_ship_data.ship_scene == null:
-		push_error("Ship scene missing in ShipData")
-		return
+	mode = GameState.garage_mode
+	if mode == GarageMode.SHIPS:
+		for ship in GameState.all_ships:
+			items.append(ship)
+	else:
+		for drone in GameState.all_drones:
+			items.append(drone)
+		print(items)
 
-	current_ship = current_ship_data.ship_scene.instantiate()
-	pivot.add_child(current_ship)
+func update_stats_display(data):
+	title.text = data.name
+	hit_points.text = "Health: " + str(data.base_health)
+	damage.text = "Damage: " + str(data.base_damage)
+	hit_rate.text = "Hit Rate: " + str(data.base_hit_rate)
 
-	current_ship.global_transform = pivot.global_transform
-	current_ship.apply_data(current_ship_data)
+# -------------------------------------------------
+# Load Preview Item
+# -------------------------------------------------
 
+func load_item(index: int):
+
+	if current_preview:
+		current_preview.queue_free()
+
+	current_item = items[index]
+
+	if mode == GarageMode.SHIPS:
+
+		var backend_ship = current_item
+		var resource_data: ShipData = load(backend_ship.tres_file_path)
+
+		if resource_data == null or resource_data.ship_scene == null:
+			push_error("Invalid Ship resource")
+			return
+
+		current_preview = resource_data.ship_scene.instantiate()
+		current_preview.apply_data(resource_data, backend_ship)
+
+		update_stats_display(backend_ship)
+
+	else:
+
+		var backend_drone = current_item
+		var resource_data: DroneData = load(backend_drone.tres_file_path)
+
+		if resource_data == null or resource_data.scene_path == null:
+			push_error("Invalid Drone resource")
+			return
+
+		current_preview = resource_data.scene_path.instantiate()
+		current_preview.apply_data(resource_data, backend_drone)
+
+		update_stats_display(backend_drone)
+
+	pivot.add_child(current_preview)
+	current_preview.global_transform = pivot.global_transform
 	pivot.rotation = Vector3.ZERO
 
 	update_button_states()
 
 
-# ------------------------
+# -------------------------------------------------
 # Buttons
-# ------------------------
-func _on_next_button_pressed():
-	if current_index < ships.size() - 1:
-		current_index += 1
-		load_ship(current_index)
+# -------------------------------------------------
 
+func _on_next_button_pressed():
+	if current_index < items.size() - 1:
+		current_index += 1
+		load_item(current_index)
+		load_animation()
 
 func _on_prev_button_pressed():
 	if current_index > 0:
 		current_index -= 1
-		load_ship(current_index)
+		load_item(current_index)
+		load_animation()
 
 
 func _on_select_button_pressed():
-	ShipManager.selected_ship_data = current_ship_data
-	SceneManager.goto_scene("res://Scenes/game.tscn")
 
+	if mode == GarageMode.SHIPS:
+		ShipManager.selected_ship_id = current_item.id
+		SceneManager.goto_scene("res://Scenes/game.tscn")
+	else:
+		DroneManager.selected_drone_id = current_item.id
+
+func load_animation():
+	animation_player.play("shippivot")
+
+# -------------------------------------------------
+# UI Helpers
+# -------------------------------------------------
 
 func update_button_states():
 	fade_button(prev, current_index > 0)
-	fade_button(next, current_index < ships.size() - 1)
+	fade_button(next, current_index < items.size() - 1)
 
 
 func fade_button(button: Button, enable: bool):
 	button.disabled = !enable
-	var target_alpha := 1.0 if enable else 0.3
 
+	var target_alpha := 1.0 if enable else 0.3
 	var tween := create_tween()
+
 	tween.tween_property(button, "modulate:a", target_alpha, 0.25)\
 		.set_trans(Tween.TRANS_SINE)\
 		.set_ease(Tween.EASE_OUT)
 
 
-# ------------------------
+# -------------------------------------------------
 # Rotation
-# ------------------------
+# -------------------------------------------------
+
 func _input(event):
 	if event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		pivot.rotate_y(event.relative.x * rotation_speed)

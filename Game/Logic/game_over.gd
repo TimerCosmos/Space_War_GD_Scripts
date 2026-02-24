@@ -28,4 +28,4 @@ func _on_restart_pressed():
 
 func _on_menu_pressed():
 	get_tree().paused = false
-	SceneManager.goto_scene("res://Scenes/MainMenu/main_menu.tscn")
+	SceneManager.goto_scene("res://Scenes/main_menu.tscn")

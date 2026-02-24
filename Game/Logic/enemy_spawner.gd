@@ -1,11 +1,11 @@
 extends Node3D
 
 @export var enemy_scene: PackedScene
-@export var base_spawn_interval := 2.0
+@export var base_spawn_interval := 1.0
 @export var min_spawn_interval := 0.4
 @export var difficulty_ramp := 0.05
 
-@export var row_count := 7
+@export var row_count := 15
 
 var spawn_interval := 2.0
 var timer := 0.0

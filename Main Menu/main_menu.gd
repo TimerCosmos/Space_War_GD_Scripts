@@ -33,4 +33,4 @@ func spawn_menu_ship():
 	current_ship.global_transform = ship_pivot.global_transform
 
 	# Inject data (IMPORTANT)
-	current_ship.apply_data(ship_data)
+	current_ship.apply_data(ship_data, null)

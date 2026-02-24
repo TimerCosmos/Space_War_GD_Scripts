@@ -24,28 +24,36 @@ func add_score(amount: int):
 	if hud:
 		hud.update_score(score)
 
+func _on_health_changed(current, max):
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.update_health(current, max)
 
 func spawn_player_ship():
-	var base_data: ShipData = ShipManager.get_selected_ship_data()
+	var resource_data: ShipData = ShipManager.get_selected_ship_data()
 	var player_data: Dictionary = ShipManager.get_player_ship_state()
 
-	if base_data == null:
+	if resource_data == null:
 		push_error("No ShipData available!")
 		return
 
-	if base_data.ship_scene == null:
-		push_error("ShipData missing ship_scene!")
+	# Get backend DTO
+	var ship_id = GameState.user.default_spaceship_id
+	var backend_ship = GameState.get_ship_by_id(ship_id)
+
+	if backend_ship == null:
+		push_error("Backend ship not found!")
 		return
 
-	ship_instance = base_data.ship_scene.instantiate()
+	ship_instance = resource_data.ship_scene.instantiate()
 	ship_pivot.add_child(ship_instance)
 
 	ship_instance.global_transform = ship_pivot.global_transform
 
-	# Inject stats
-	ship_instance.apply_data(base_data, player_data)
+	# Inject BOTH
+	ship_instance.apply_data(resource_data, backend_ship, player_data)
 
-	# Connect destruction
+	ship_instance.health_changed.connect(_on_health_changed)
 	ship_instance.ship_destroyed.connect(_on_ship_destroyed)
 
 	# Tell spawner who to target

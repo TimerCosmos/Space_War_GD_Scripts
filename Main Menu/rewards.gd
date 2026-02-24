@@ -1,5 +1,3 @@
-# No api call is needed
-
 extends Button
 
 
@@ -12,7 +10,6 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	pass
 
-
-func _on_pressed() -> void:
-	GameState.garage_mode = GameState.GarageMode.SHIPS
-	SceneManager.goto_scene("res://Scenes/space_garage.tscn")
+func _on_rewards_pressed():
+	GameState.garage_mode = GameState.GarageMode.DRONES
+	SceneManager.goto_scene("res://Scenes/Rewards/rewards.tscn")
