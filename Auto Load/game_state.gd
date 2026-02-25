@@ -16,7 +16,7 @@ var user_data: UserProfile
 var user: UserProfile = null
 var all_ships: Array[Spaceship] = []
 var all_drones: Array[Drone] = []
-
+var all_enemies : Array[Enemy] = []
 var owned_ship_ids: Array[String] = []
 var owned_drone_ids: Array[String] = []
 
@@ -52,4 +52,9 @@ func get_ship_by_id(id: String):
 		if ship.id == id:
 			return ship
 	return null
-	
+
+func update_resources(coins: int, exp: int, diamonds: int, level: int):
+	user.coins = coins
+	user.exp = exp
+	user.diamonds = diamonds
+	user.level = level

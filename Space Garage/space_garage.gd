@@ -135,11 +135,50 @@ func _on_prev_button_pressed():
 func _on_select_button_pressed():
 
 	if mode == GarageMode.SHIPS:
-		ShipManager.selected_ship_id = current_item.id
-		SceneManager.goto_scene("res://Scenes/game.tscn")
+		var backend_ship = current_item   # DTO
+		UserService.set_default_spaceship(
+			backend_ship.id,
+			_on_default_ship_updated
+		)
 	else:
-		DroneManager.selected_drone_id = current_item.id
+		var backend_drone = current_item
+		UserService.set_default_drone(
+			backend_drone.id,
+			_on_default_drone_updated
+		)
 
+func _on_default_ship_updated(code, response_text):
+
+	if code != 200:
+		print("Failed to set default ship")
+		return
+
+	var json = JSON.parse_string(response_text)
+	if json == null:
+		return
+
+	# Update GameState user
+	GameState.user = UserProfile.from_dict(json)
+
+	# Update ShipManager
+	ShipManager.selected_ship_id = GameState.user.default_spaceship_id
+
+	SceneManager.goto_scene("res://Scenes/game.tscn")
+
+func _on_default_drone_updated(code, response_text):
+
+	if code != 200:
+		print("Failed to set default drone")
+		return
+
+	var json = JSON.parse_string(response_text)
+	if json == null:
+		return
+
+	GameState.user = UserProfile.from_dict(json)
+
+	DroneManager.selected_drone_id = GameState.user.default_drone_id
+	
 func load_animation():
 	animation_player.play("shippivot")
 

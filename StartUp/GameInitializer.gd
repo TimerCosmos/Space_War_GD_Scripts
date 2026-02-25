@@ -59,7 +59,12 @@ func _parse_bootstrap(data: Dictionary):
 		GameState.all_drones.append(
 			Drone.from_dict(drone_dict)
 		)
-
+	
+	GameState.all_enemies.clear()
+	for enemy_dict in data.get("enemies", []):
+		GameState.all_enemies.append(
+			Enemy.from_dict(enemy_dict)
+		)
 	# ---------------------------
 	# ENEMIES (optional for now)
 	# ---------------------------

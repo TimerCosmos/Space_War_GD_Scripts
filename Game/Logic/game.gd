@@ -13,10 +13,15 @@ extends Node3D
 
 var ship_instance: SpaceShip = null
 var score := 0
+var time_alive := 0.0
 
 func _ready():
 	spawn_player_ship()
 
+func _process(delta):
+	if !get_tree().paused:
+		time_alive += delta
+		
 func add_score(amount: int):
 	score += amount
 	
@@ -48,7 +53,7 @@ func spawn_player_ship():
 		return
 
 	# Get backend DTO
-	var ship_id = GameState.user.default_spaceship_id
+	var ship_id = ShipManager.selected_ship_id
 	var backend_ship = GameState.get_ship_by_id(ship_id)
 
 	if backend_ship == null:
@@ -77,4 +82,4 @@ func _on_ship_destroyed():
 	var game_over_ui = get_tree().get_first_node_in_group("game_over")
 	
 	if game_over_ui:
-		game_over_ui.show_game_over(score)
+		game_over_ui.show_game_over(score, int(time_alive))

@@ -43,7 +43,6 @@ func apply_data(resource_data: ShipData, backend_data: Spaceship, player_data: D
 	runtime_damage = backend_data.base_damage
 	runtime_fire_rate = backend_data.base_hit_rate
 	runtime_speed = backend_data.base_speed
-
 	# Persistent DB bonuses
 	if player_data.has("bonus_health"):
 		runtime_max_health += player_data["bonus_health"]
