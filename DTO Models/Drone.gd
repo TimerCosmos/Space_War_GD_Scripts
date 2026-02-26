@@ -4,8 +4,8 @@ extends RefCounted
 var id: String
 var name: String
 
-var rarity_id: String
-var type_id: String
+var rarity: String
+var type: String
 
 var base_health: int
 var base_damage: int
@@ -23,11 +23,11 @@ static func from_dict(data: Dictionary) -> Drone:
 	drone.id = str(data.get("id", ""))
 	drone.name = str(data.get("name", ""))
 
-	var rarity = data.get("rarity_id")
-	drone.rarity_id = str(rarity) if rarity != null else ""
+	var rarity = data.get("rarity")
+	drone.rarity = str(rarity) if rarity != null else ""
 
-	var type_val = data.get("type_id")
-	drone.type_id = str(type_val) if type_val != null else ""
+	var type_val = data.get("type")
+	drone.type = str(type_val) if type_val != null else ""
 
 	drone.base_health = int(data.get("base_health", 0))
 	drone.base_damage = int(data.get("base_damage", 0))

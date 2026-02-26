@@ -4,8 +4,8 @@ extends RefCounted
 var id: String
 var name: String
 
-var rarity_id: String
-var type_id: String
+var rarity: String
+var type: String
 
 var base_health: int
 var base_damage: int
@@ -26,11 +26,11 @@ static func from_dict(data: Dictionary) -> Spaceship:
 	ship.id = str(data.get("id", ""))
 	ship.name = str(data.get("name", ""))
 
-	var rarity = data.get("rarity_id")
-	ship.rarity_id = str(rarity) if rarity != null else ""
+	var rarity = data.get("rarity")
+	ship.rarity = str(rarity) if rarity != null else ""
 
-	var type_val = data.get("type_id")
-	ship.type_id = str(type_val) if type_val != null else ""
+	var type_val = data.get("type")
+	ship.type = str(type_val) if type_val != null else ""
 
 	ship.base_health = int(data.get("base_health", 0))
 	ship.base_damage = int(data.get("base_damage", 0))

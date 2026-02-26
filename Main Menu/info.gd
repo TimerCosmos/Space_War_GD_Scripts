@@ -5,6 +5,8 @@ extends Node
 @onready var level_label: Label = $ProfileBlock/ExpWidget/LevelLabel
 @onready var profile_pic: TextureRect = $ProfileBlock/ProfilePic
 @onready var username_label: Label = $ProfileBlock/UsernameLabel
+@onready var coins_label: Label = $ProfileBlock/Coins
+@onready var diamonds_label: Label = $ProfileBlock/Diamonds
 
 
 func _ready():
@@ -15,11 +17,13 @@ func _ready():
 		GameState.user.exp,
 		500,
 		GameState.user.name,
-	    "res://assets/profile.png"
+		"res://assets/profile.png",
+		GameState.user.coins,
+		GameState.user.diamonds
 	)
 
 
-func load_player_ui(level:int, current_exp:int, exp_to_next:int, username:String, profile_path:String):
+func load_player_ui(level:int, current_exp:int, exp_to_next:int, username:String, profile_path:String, coins:int, diamonds:int):
 	# Level number
 	level_label.text = str(level)
 
@@ -29,7 +33,8 @@ func load_player_ui(level:int, current_exp:int, exp_to_next:int, username:String
 
 	# Username
 	username_label.text = username
-
+	coins_label.text = "Coins : "+str(coins)
+	diamonds_label.text = "Diamonds : "+str(diamonds)
 	# Profile picture
 	if ResourceLoader.exists(profile_path):
 		profile_pic.texture = load(profile_path)
