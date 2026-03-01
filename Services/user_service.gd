@@ -1,6 +1,11 @@
 extends Node
 class_name UserService
 
+
+# -------------------------------------------------
+# Default Selection
+# -------------------------------------------------
+
 static func set_default_spaceship(ship_id: String, callback: Callable):
 	var body = {
 		"spaceship_id": ship_id
@@ -20,6 +25,55 @@ static func set_default_drone(drone_id: String, callback: Callable):
 
 	ApiClient.patch_with_auth(
 		"/api/v1/users/default-drone",
+		body,
+		callback
+	)
+
+
+# -------------------------------------------------
+# Upgrade Preview
+# -------------------------------------------------
+
+static func get_spaceship_upgrade_preview(id: String, callback: Callable):
+	ApiClient.get_with_auth(
+		"/api/v1/spaceships/%s/upgrade-preview" % id,
+		callback
+	)
+
+
+static func get_drone_upgrade_preview(id: String, callback: Callable):
+	ApiClient.get_with_auth(
+		"/api/v1/drones/%s/upgrade-preview" % id,
+		callback
+	)
+
+
+# -------------------------------------------------
+# Upgrade Action
+# -------------------------------------------------
+
+static func upgrade_spaceship(id: String, stat_type: String, upgrades_count: int, callback: Callable):
+
+	var body = {
+		"stat_type": stat_type,
+		"upgrades_count": upgrades_count
+	}
+
+	ApiClient.post_with_auth(
+		"/api/v1/spaceships/%s/upgrade" % id,
+		body,
+		callback
+	)
+
+static func upgrade_drone(id: String, stat_type: String,upgrades_count: int, callback: Callable):
+
+	var body = {
+		"stat_type": stat_type,
+		"upgrades_count" : upgrades_count
+	}
+
+	ApiClient.post_with_auth(
+		"/api/v1/drones/%s/upgrade" % id,
 		body,
 		callback
 	)

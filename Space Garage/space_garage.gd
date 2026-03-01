@@ -17,7 +17,7 @@ var current_item = null     # Generic resource
 var current_preview: Node3D = null    # Instantiated 3D preview
 
 var rotation_speed := 0.005
-
+var is_owned := false
 
 # -------------------------------------------------
 # Node References
@@ -26,9 +26,9 @@ var rotation_speed := 0.005
 @onready var pivot: Node3D = $ShipPivot
 @onready var prev: Button = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/Prev
 @onready var next: Button = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/Next
-@onready var hit_points: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/VBoxContainer/Hit Points"
-@onready var damage: Label = $CanvasLayer/Control/StatsPanel/MarginContainer/VBoxContainer/Damage
-@onready var hit_rate: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/VBoxContainer/Hit Rate"
+@onready var hit_points: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Points Label"
+@onready var damage: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Damage Label"
+@onready var hit_rate: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Rate Label"
 @onready var title: Label = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/Back/Title
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 @onready var glow_frame: ColorRect = $CanvasLayer/Control/GlowFrame
@@ -42,6 +42,18 @@ var rotation_speed := 0.005
 
 @onready var select: Button = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/Select
 @onready var cost: Label = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/Cost
+@onready var grid_container: GridContainer = $CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer
+
+@onready var hit_points_button: Button = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Points Button"
+@onready var hit_points_up_value: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Points Up Value"
+@onready var damage_button: Button = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Damage Button"
+@onready var damage_up_value: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Damage Up Value"
+@onready var hit_rate_button: Button = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Rate Button"
+@onready var hit_rate_up_value: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Rate Up Value"
+
+@onready var hit_points_level_label: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Points Level Label"
+@onready var damage_level_label: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Damage Level Label"
+@onready var hit_rate_level_label: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Rate Level Label"
 
 
 # -------------------------------------------------
@@ -55,8 +67,9 @@ func _ready():
 		push_error("No data loaded for garage")
 		return
 	load_item(0)
-	#await get_tree().process_frame
-	#setup_particles()
+	hit_points_button.pressed.connect(func(): upgrade_stat("health"))
+	damage_button.pressed.connect(func(): upgrade_stat("damage"))
+	hit_rate_button.pressed.connect(func(): upgrade_stat("hit_rate"))
 # -------------------------------------------------
 # Load Data (Ships or Drones)
 # -------------------------------------------------
@@ -71,7 +84,6 @@ func load_data():
 	else:
 		for drone in GameState.all_drones:
 			items.append(drone)
-		print(items)
 
 func update_stats_display(data):
 	title.text = data.name
@@ -101,10 +113,15 @@ func load_item(index: int):
 
 		current_preview = resource_data.ship_scene.instantiate()
 		current_preview.apply_data(resource_data, backend_ship)
-		if(GameState.return_owned_or_not("Ships",backend_ship.id)):
+		is_owned = GameState.return_owned_or_not("Ships", backend_ship.id)
+
+		if is_owned:
 			select.visible = true
+			cost.visible = false
 		else:
-			cost.text = backend_ship.resource_type + " : "+ str(backend_ship.cost)
+			select.visible = false
+			cost.visible = true
+			cost.text = backend_ship.resource_type + " : " + str(backend_ship.cost)
 		update_stats_display(backend_ship)
 		var rarity_enum = RarityEnum.from_string(current_item.rarity)
 		apply_rarity_glow(rarity_enum)
@@ -120,10 +137,15 @@ func load_item(index: int):
 
 		current_preview = resource_data.scene_path.instantiate()
 		current_preview.apply_data(resource_data, backend_drone)
-		if(GameState.return_owned_or_not("Drones",backend_drone.id)):
+		is_owned = GameState.return_owned_or_not("Drones", backend_drone.id)
+
+		if is_owned:
 			select.visible = true
+			cost.visible = false
 		else:
-			cost.text = backend_drone.resource_type + " : "+ str(backend_drone.cost)
+			select.visible = false
+			cost.visible = true
+			cost.text = backend_drone.resource_type + " : " + str(backend_drone.cost)
 		update_stats_display(backend_drone)
 		var rarity_enum = RarityEnum.from_string(current_item.rarity)
 		apply_rarity_glow(rarity_enum)
@@ -133,7 +155,7 @@ func load_item(index: int):
 	pivot.rotation = Vector3.ZERO
 
 	update_button_states()
-
+	update_upgrade_visibility()
 
 # -------------------------------------------------
 # Buttons
@@ -448,3 +470,192 @@ func set_galactic_particles():
 	for p in [p_top, p_bottom, p_left, p_right]:
 		var mat = p.process_material as ParticleProcessMaterial
 		mat.color_ramp = gradient
+		
+# Upgrades
+
+
+func load_upgrade_preview():
+
+	if current_item == null:
+		return
+
+	if mode == GarageMode.SHIPS:
+		UserService.get_spaceship_upgrade_preview(
+			current_item.id,
+			_on_upgrade_preview_loaded
+		)
+	else:
+		UserService.get_drone_upgrade_preview(
+			current_item.id,
+			_on_upgrade_preview_loaded
+		)
+
+func _on_upgrade_preview_loaded(code, response_text):
+
+	if code != 200:
+		print("Upgrade preview failed")
+		return
+
+	var json = JSON.parse_string(response_text)
+	if json == null:
+		return
+
+	var resource_type = json.get("resource_type", "COINS")
+
+	var emoji = ""
+	match resource_type:
+		"COINS":
+			emoji = " 🪙"
+		"DIAMONDS":
+			emoji = " 💎"
+
+	# Reset UI
+	hit_points_button.disabled = true
+	damage_button.disabled = true
+	hit_rate_button.disabled = true
+
+	for stat in json.get("stat_previews", []):
+
+		var stat_type = stat.get("stat_type", "")
+		var affordable = int(stat.get("affordable_count", 0))
+		var upgrades_available = stat.get("upgrades_available", true)
+		var upgrades = stat.get("upgrades", [])
+		var current_level = int(stat.get("current_level", 1))
+		var button
+		var label
+
+		match stat_type:
+			"health":
+				button = hit_points_button
+				label = hit_points_up_value
+				hit_points_level_label.text = "Level: " + str(current_level)
+
+			"damage":
+				button = damage_button
+				label = damage_up_value
+				damage_level_label.text = "Level: " + str(current_level)
+
+			"hit_rate":
+				button = hit_rate_button
+				label = hit_rate_up_value
+				hit_rate_level_label.text = "Level: " + str(current_level)
+			_:
+				continue
+
+		if not upgrades_available:
+			button.disabled = true
+			button.text = "MAXED"
+			label.text = ""
+			continue
+
+		if upgrades.is_empty():
+			button.disabled = true
+			button.text = "-"
+			label.text = ""
+			continue
+
+		var step = upgrades[0]
+		var value = step.get("upgrade_value", 0)
+		var cost = int(step.get("cost", 0))
+
+		button.text = str(cost) + emoji
+		label.text = "+" + str(value)
+
+		button.disabled = affordable <= 0
+func upgrade_stat(stat_type: String):
+
+	if not is_owned:
+		return
+
+	var count = 1  # For now single upgrade
+
+	if mode == GarageMode.SHIPS:
+		UserService.upgrade_spaceship(
+			current_item.id,
+			stat_type,
+			count,
+			_on_upgrade_done
+		)
+	else:
+		UserService.upgrade_drone(
+			current_item.id,
+			stat_type,
+			count,
+			_on_upgrade_done
+		)
+
+func _on_upgrade_done(code, response_text):
+
+	print("Upgrade response:", code, response_text)
+
+	if code != 200:
+		print("Upgrade failed")
+		return
+
+	var json = JSON.parse_string(response_text)
+	if json == null:
+		return
+
+	if not json.get("success", false):
+		print("Upgrade not successful:", json.get("message", ""))
+		return
+
+	# -------------------------
+	# 1️⃣ Update spaceship stats in garage
+	# -------------------------
+
+	var updated_stats = json.get("updated_stats", null)
+	if updated_stats != null:
+		current_item.base_health = int(updated_stats.get("health", current_item.base_health))
+		current_item.base_damage = int(updated_stats.get("damage", current_item.base_damage))
+		current_item.base_hit_rate = float(updated_stats.get("hit_rate", current_item.base_hit_rate))
+
+		update_stats_display(current_item)
+
+	# -------------------------
+	# 2️⃣ Update GameState economy
+	# -------------------------
+
+	var economy = json.get("user_economy", null)
+	if economy != null:
+		GameState.update_resources(
+			economy.get("COINS", GameState.user.coins),
+			economy.get("XP", GameState.user.exp),
+			economy.get("DIAMONDS", GameState.user.diamonds),
+			GameState.user.level
+		)
+
+	# -------------------------
+	# 3️⃣ Update owned ships list
+	# -------------------------
+
+	var owned_ids = json.get("owned_ship_ids", [])
+	GameState.owned_ship_ids = owned_ids
+
+	# -------------------------
+	# 4️⃣ Refresh upgrade preview
+	# -------------------------
+
+	load_upgrade_preview()
+
+func update_upgrade_visibility():
+
+	var visible = is_owned
+
+	hit_points_button.visible = visible
+	damage_button.visible = visible
+	hit_rate_button.visible = visible
+	
+	hit_points_up_value.visible = visible
+	damage_up_value.visible = visible
+	hit_rate_up_value.visible = visible
+	
+	hit_points_level_label.visible = visible
+	damage_level_label.visible= visible
+	hit_rate_level_label.visible = visible
+
+	if visible:
+		grid_container.columns = 4
+		load_upgrade_preview()
+	else:
+		grid_container.columns = 1

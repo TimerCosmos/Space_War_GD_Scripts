@@ -54,10 +54,9 @@ func get_ship_by_id(id: String):
 	return null
 	
 func return_owned_or_not(mode:String, id:String):
-	print(owned_drone_ids)
-	print(owned_ship_ids)
 	if mode == "Ships":
 		for ship_id in owned_ship_ids:
+			print(id, ship_id)
 			if ship_id == id:
 				return true
 	else:
