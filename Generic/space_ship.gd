@@ -10,7 +10,7 @@ var ship_data: ShipData
 var current_health: int
 @export var default_drone_data: DroneData
 
-@onready var muzzle: Marker3D = $Marker3D
+@onready var muzzles: Array = []
 
 # Drone system
 var drones: Array = []
@@ -63,7 +63,12 @@ func apply_data(resource_data: ShipData, backend_data: Spaceship, player_data: D
 # -------------------------------------------------
 func _ready():
 	add_to_group("player")
-
+		# Collect all muzzle markers dynamically
+	var muzzle_parent = $Muzzles
+	for child in muzzle_parent.get_children():
+		if child is Marker3D:
+			muzzles.append(child)
+			
 	var scene := get_tree().current_scene
 	if scene and scene.scene_file_path.ends_with("game.tscn"):
 		enable_controls(true)
@@ -116,9 +121,10 @@ func shoot():
 	if ship_data == null or ship_data.bullet_scene == null:
 		return
 
-	var bullet = ship_data.bullet_scene.instantiate()
-	get_tree().current_scene.add_child(bullet)
-	bullet.global_transform = muzzle.global_transform
+	for muzzle in muzzles:
+		var bullet = ship_data.bullet_scene.instantiate()
+		get_tree().current_scene.add_child(bullet)
+		bullet.global_transform = muzzle.global_transform
 
 
 # -------------------------------------------------

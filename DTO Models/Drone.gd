@@ -11,6 +11,8 @@ var base_health: int
 var base_damage: int
 var base_hit_rate: float
 
+var resource_type : String
+var cost : int
 var tres_file_path: String
 var scene_path: String
 
@@ -37,7 +39,12 @@ static func from_dict(data: Dictionary) -> Drone:
 
 	var tres = data.get("tres_file_path")
 	drone.tres_file_path = str(tres) if tres != null else ""
-
+	
+	var resource_type = data.get("resource_type")
+	drone.resource_type = str(resource_type) if resource_type != null else "Coins"
+	
+	var cost = data.get("cost")
+	drone.cost = int(cost) if cost != null else 0
 	var scene = data.get("scene_path")
 	drone.scene_path = str(scene) if scene != null else ""
 

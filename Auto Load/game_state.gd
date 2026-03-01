@@ -52,6 +52,19 @@ func get_ship_by_id(id: String):
 		if ship.id == id:
 			return ship
 	return null
+	
+func return_owned_or_not(mode:String, id:String):
+	print(owned_drone_ids)
+	print(owned_ship_ids)
+	if mode == "Ships":
+		for ship_id in owned_ship_ids:
+			if ship_id == id:
+				return true
+	else:
+		for drone_id in owned_drone_ids:
+			if drone_id == id:
+				return true
+	return false
 
 func update_resources(coins: int, exp: int, diamonds: int, level: int):
 	user.coins = coins

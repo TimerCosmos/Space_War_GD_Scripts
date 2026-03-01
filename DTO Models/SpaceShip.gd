@@ -17,6 +17,8 @@ var max_drones: int
 var tres_file_path: String
 var scene_path: String
 
+var resource_type : String
+var cost : int
 var is_active: bool
 
 
@@ -40,6 +42,12 @@ static func from_dict(data: Dictionary) -> Spaceship:
 
 	var speed = data.get("base_speed")
 	ship.base_speed = float(speed) if speed != null else 0.0
+	
+	var resource_type = data.get("resource_type")
+	ship.resource_type = str(resource_type) if resource_type != null else "Coins"
+	
+	var cost = data.get("cost")
+	ship.cost = int(cost) if cost != null else 0
 
 	var drones = data.get("max_drones")
 	ship.max_drones = int(drones) if drones != null else 0

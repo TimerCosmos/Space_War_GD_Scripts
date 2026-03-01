@@ -24,7 +24,6 @@ var rotation_speed := 0.005
 # -------------------------------------------------
 
 @onready var pivot: Node3D = $ShipPivot
-@onready var select: Button = $CanvasLayer/Control/MarginContainer/ShipScrolls/Select
 @onready var prev: Button = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/Prev
 @onready var next: Button = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/Next
 @onready var hit_points: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/VBoxContainer/Hit Points"
@@ -40,6 +39,10 @@ var rotation_speed := 0.005
 @onready var p_left: GPUParticles2D = $CanvasLayer/Control/BorderParticles/Left
 @onready var p_right: GPUParticles2D = $CanvasLayer/Control/BorderParticles/Right
 @onready var p_bottom: GPUParticles2D = $CanvasLayer/Control/BorderParticles/Bottom
+
+@onready var select: Button = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/Select
+@onready var cost: Label = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/Cost
+
 
 # -------------------------------------------------
 # Ready
@@ -98,7 +101,10 @@ func load_item(index: int):
 
 		current_preview = resource_data.ship_scene.instantiate()
 		current_preview.apply_data(resource_data, backend_ship)
-
+		if(GameState.return_owned_or_not("Ships",backend_ship.id)):
+			select.visible = true
+		else:
+			cost.text = backend_ship.resource_type + " : "+ str(backend_ship.cost)
 		update_stats_display(backend_ship)
 		var rarity_enum = RarityEnum.from_string(current_item.rarity)
 		apply_rarity_glow(rarity_enum)
@@ -114,7 +120,10 @@ func load_item(index: int):
 
 		current_preview = resource_data.scene_path.instantiate()
 		current_preview.apply_data(resource_data, backend_drone)
-
+		if(GameState.return_owned_or_not("Drones",backend_drone.id)):
+			select.visible = true
+		else:
+			cost.text = backend_drone.resource_type + " : "+ str(backend_drone.cost)
 		update_stats_display(backend_drone)
 		var rarity_enum = RarityEnum.from_string(current_item.rarity)
 		apply_rarity_glow(rarity_enum)
