@@ -12,7 +12,7 @@ static func from_string(name: String) -> int:
 	match name.to_lower():
 		"common": return Rarity.COMMON
 		"rare": return Rarity.RARE
-		"epic": return Rarity.EPIC
+		"epic": return Rarity.EPIC	
 		"legendary": return Rarity.LEGENDARY
 		"galactic": return Rarity.GALACTIC
 		_: return Rarity.COMMON

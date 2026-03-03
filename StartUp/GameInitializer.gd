@@ -41,7 +41,7 @@ func _parse_bootstrap(data: Dictionary):
 	# USER
 	# ---------------------------
 	GameState.user = UserProfile.from_dict(data.get("user", {}))
-
+	
 	# ---------------------------
 	# SHIPS
 	# ---------------------------

@@ -77,3 +77,26 @@ static func upgrade_drone(id: String, stat_type: String,upgrades_count: int, cal
 		body,
 		callback
 	)
+
+static func buy_spaceship(id: String, callback: Callable):
+	ApiClient.post_with_auth(
+		"/api/v1/spaceships/%s/buy" % id,
+		{},
+		callback
+	)
+
+static func buy_drone(id: String, callback: Callable):
+	ApiClient.post_with_auth(
+		"/api/v1/drones/%s/buy" % id,
+		{},
+		callback
+	)
+	
+static func get_permanent_upgrade_catalog(callback: Callable):
+	ApiClient.get_with_auth("/api/v1/permanent-upgrades-v2/catalog", callback) 
+	
+static func reset_permanent_upgrades(callback : Callable):
+	ApiClient.post_with_auth("/api/v1/permanent-upgrades-v2/reset", {},callback)
+	
+static func buy_permanent_upgrade(Callback : Callable, permanent_upgrade_id : String):
+	ApiClient.post_with_auth("/api/v1/permanent-upgrades-v2/%s/upgrade" % permanent_upgrade_id, {}, Callback)

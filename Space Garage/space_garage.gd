@@ -41,7 +41,7 @@ var is_owned := false
 @onready var p_bottom: GPUParticles2D = $CanvasLayer/Control/BorderParticles/Bottom
 
 @onready var select: Button = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/Select
-@onready var cost: Label = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/Cost
+@onready var buy_button: Button = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/BuyButton
 @onready var grid_container: GridContainer = $CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer
 
 @onready var hit_points_button: Button = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Points Button"
@@ -117,11 +117,24 @@ func load_item(index: int):
 
 		if is_owned:
 			select.visible = true
-			cost.visible = false
+			buy_button.visible = false
 		else:
 			select.visible = false
-			cost.visible = true
-			cost.text = backend_ship.resource_type + " : " + str(backend_ship.cost)
+			buy_button.visible = true
+			
+			var resource_type = backend_ship.resource_type
+			var item_cost = int(backend_ship.cost)
+			var balance = get_user_balance(resource_type)
+			
+			var emoji = ""
+			if resource_type == "COINS":
+				emoji = " 🪙"
+			elif resource_type == "DIAMONDS":
+				emoji = " 💎"
+			
+			buy_button.text = "Buy " + str(item_cost) + emoji
+			
+			buy_button.disabled = balance < item_cost
 		update_stats_display(backend_ship)
 		var rarity_enum = RarityEnum.from_string(current_item.rarity)
 		apply_rarity_glow(rarity_enum)
@@ -141,11 +154,24 @@ func load_item(index: int):
 
 		if is_owned:
 			select.visible = true
-			cost.visible = false
+			buy_button.visible = false
 		else:
 			select.visible = false
-			cost.visible = true
-			cost.text = backend_drone.resource_type + " : " + str(backend_drone.cost)
+			buy_button.visible = true
+			
+			var resource_type = backend_drone.resource_type
+			var item_cost = int(backend_drone.cost)
+			var balance = get_user_balance(resource_type)
+			
+			var emoji = ""
+			if resource_type == "COINS":
+				emoji = " 🪙"
+			elif resource_type == "DIAMONDS":
+				emoji = " 💎"
+			
+			buy_button.text = "Buy " + str(item_cost) + emoji
+			
+			buy_button.disabled = balance < item_cost
 		update_stats_display(backend_drone)
 		var rarity_enum = RarityEnum.from_string(current_item.rarity)
 		apply_rarity_glow(rarity_enum)
@@ -157,10 +183,139 @@ func load_item(index: int):
 	update_button_states()
 	update_upgrade_visibility()
 
+func get_user_balance(resource_type: String) -> int:
+	match resource_type:
+		"COINS":
+			return GameState.user.coins
+		"DIAMONDS":
+			return GameState.user.diamonds
+		_:
+			return 0
+			
 # -------------------------------------------------
 # Buttons
 # -------------------------------------------------
+func _on_buy_button_pressed():
 
+	if is_owned:
+		return
+	
+	if mode == GarageMode.SHIPS:
+		UserService.buy_spaceship(
+			current_item.id,
+			_on_buy_done
+		)
+	else:
+		UserService.buy_drone(
+			current_item.id,
+			_on_buy_done
+		)
+		
+func _on_buy_done(code, response_text):
+
+	if code != 200:
+		print("Buy failed")
+		return
+
+	var json = JSON.parse_string(response_text)
+	if json == null:
+		return
+
+	if not json.get("success", false):
+		print("Purchase failed:", json.get("message", ""))
+		return
+
+	# ----------------------------------
+	# 1️⃣ Update Economy
+	# ----------------------------------
+
+	var economy = json.get("user_economy", null)
+	if economy != null:
+		GameState.update_resources(
+			economy.get("COINS", GameState.user.coins),
+			economy.get("XP", GameState.user.exp),
+			economy.get("DIAMONDS", GameState.user.diamonds),
+			GameState.user.level
+		)
+
+	# ----------------------------------
+	# 2️⃣ Update Owned Ships
+	# ----------------------------------
+
+	GameState.owned_ship_ids = json.get("owned_ship_ids", [])
+
+	# ----------------------------------
+	# 3️⃣ Update Local Current Item Data
+	# ----------------------------------
+
+	var updated_ship = json.get("spaceship", null)
+	if updated_ship != null:
+		current_item.base_health = updated_ship.get("base_health", current_item.base_health)
+		current_item.base_damage = updated_ship.get("base_damage", current_item.base_damage)
+		current_item.base_hit_rate = updated_ship.get("base_hit_rate", current_item.base_hit_rate)
+
+		update_stats_display(current_item)
+
+	# ----------------------------------
+	# 4️⃣ Immediately Apply Upgrade Preview
+	# ----------------------------------
+
+	var preview = json.get("upgrade_preview", null)
+	if preview != null:
+		apply_upgrade_preview(preview)
+
+	# ----------------------------------
+	# 5️⃣ Switch UI to Owned State
+	# ----------------------------------
+
+	is_owned = true
+	select.visible = true
+	buy_button.visible = false
+
+	update_upgrade_visibility()
+
+func apply_upgrade_preview(json):
+
+	hit_points_button.disabled = true
+	damage_button.disabled = true
+	hit_rate_button.disabled = true
+
+	for stat in json.get("stat_previews", []):
+
+		var stat_type = stat.get("stat_type", "")
+		var affordable = int(stat.get("affordable_count", 0))
+		var upgrades = stat.get("upgrades", [])
+		var upgrades_available = stat.get("upgrades_available", true)
+
+		var button
+		var label
+
+		match stat_type:
+			"health":
+				button = hit_points_button
+				label = hit_points_up_value
+			"damage":
+				button = damage_button
+				label = damage_up_value
+			"hit_rate":
+				button = hit_rate_button
+				label = hit_rate_up_value
+			_:
+				continue
+
+		if not upgrades_available:
+			label.text = "Maxed (Current Version)"
+			button.disabled = true
+			continue
+
+		if upgrades.size() > 0:
+			var first = upgrades[0]
+			var cost = int(first.get("cost", 0))
+			var value = first.get("upgrade_value", 0)
+
+			label.text = "+" + str(value)
+			button.text = str(cost)
+			button.disabled = affordable <= 0
 func _on_next_button_pressed():
 	if current_index < items.size() - 1:
 		current_index += 1
@@ -223,6 +378,7 @@ func _on_default_drone_updated(code, response_text):
 	
 func load_animation():
 	animation_player.play("shippivot")
+
 
 # -------------------------------------------------
 # UI Helpers

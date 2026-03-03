@@ -15,7 +15,7 @@ func _ready():
 	load_player_ui(
 		GameState.user.level,
 		GameState.user.exp,
-		500,
+		GameState.user.exp_to_next_level,
 		GameState.user.name,
 		"res://assets/profile.png",
 		GameState.user.coins,
@@ -26,9 +26,8 @@ func _ready():
 func load_player_ui(level:int, current_exp:int, exp_to_next:int, username:String, profile_path:String, coins:int, diamonds:int):
 	# Level number
 	level_label.text = str(level)
-
 	# EXP progress
-	exp_ring.max_value = exp_to_next
+	exp_ring.max_value = exp_to_next + current_exp
 	exp_ring.value = current_exp
 
 	# Username

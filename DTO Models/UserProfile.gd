@@ -8,6 +8,7 @@ var default_spaceship_id: String
 var default_drone_id: String
 var level: int
 var exp: int
+var exp_to_next_level : int
 var coins: int
 var diamonds: int
 var exp_tokens: int
@@ -22,6 +23,7 @@ static func from_dict(data: Dictionary) -> UserProfile:
 	user.email = data.get("email", "")
 	user.name = data.get("name", "")
 	user.default_spaceship_id = data.get("default_spaceship_id", "")
+	user.exp_to_next_level = data.get("xp_needed_for_next_level")
 	user.default_drone_id = data.get("default_drone_id","")
 	user.level = data.get("level", 1)
 	user.exp = data.get("exp", 0)
