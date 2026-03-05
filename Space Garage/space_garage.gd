@@ -786,7 +786,10 @@ func _on_upgrade_done(code, response_text):
 	# -------------------------
 
 	var owned_ids = json.get("owned_ship_ids", [])
-	GameState.owned_ship_ids = owned_ids
+
+	GameState.owned_ship_ids = owned_ids.map(func(id):
+		return str(id)
+	)
 
 	# -------------------------
 	# 4️⃣ Refresh upgrade preview

@@ -12,6 +12,7 @@ var exp_to_next_level : int
 var coins: int
 var diamonds: int
 var exp_tokens: int
+var tickets : int
 var is_active: bool
 var created_at: String
 
@@ -30,6 +31,7 @@ static func from_dict(data: Dictionary) -> UserProfile:
 	user.coins = data.get("coins", 0)
 	user.diamonds = data.get("diamonds", 0)
 	user.exp_tokens = data.get("exp_tokens", 0)
+	user.tickets = data.get("total_reward_tickets",0)
 	user.is_active = data.get("is_active", false)
 	user.created_at = data.get("created_at", "")
 

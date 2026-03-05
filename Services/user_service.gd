@@ -100,3 +100,15 @@ static func reset_permanent_upgrades(callback : Callable):
 	
 static func buy_permanent_upgrade(Callback : Callable, permanent_upgrade_id : String):
 	ApiClient.post_with_auth("/api/v1/permanent-upgrades-v2/%s/upgrade" % permanent_upgrade_id, {}, Callback)
+	
+static func get_draw_state(Callback:Callable):
+	ApiClient.get_with_auth("/api/v1/card-draw/state", Callback)
+	
+static func start_round(Callback:Callable):
+	ApiClient.post_with_auth("/api/v1/card-draw/rounds/start", {},Callback)
+
+static func pick_card(round_id:String, payload, Callback:Callable):
+	ApiClient.post_with_auth("/api/v1/card-draw/rounds/%s/pick" % round_id, payload, Callback)
+	
+static func claim_result(id,Callback:Callable):
+	ApiClient.post_with_auth( "/api/v1/card-draw/pending/%s/claim" % id,{},Callback)
