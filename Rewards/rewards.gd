@@ -121,20 +121,24 @@ func _on_round_started(code, body):
 	grid.columns = calculate_columns()
 
 	for i in range(card_count):
-		var card = create_card(i + 1)
-		grid.add_child(card)
+		create_card(i+1)
 
 
 # -----------------------------------
 # CREATE CARD
 # -----------------------------------
-func create_card(position: int) -> Button:
+func create_card(position: int):
 
 	var card_scene = preload("res://Scenes/Rewards/card.tscn")
 	var card = card_scene.instantiate()
 
-	card.text = "?"
 	card.custom_minimum_size = Vector2(150, 200)
+
+	grid.add_child(card)
+
+	await get_tree().process_frame   # ensure @onready vars exist
+
+	card.setup({})
 
 	card.pressed.connect(func():
 		if round_active:
@@ -142,7 +146,6 @@ func create_card(position: int) -> Button:
 	)
 
 	return card
-
 
 # -----------------------------------
 # PICK CARD
@@ -215,6 +218,7 @@ func reveal_reward(reward: Dictionary, json: Dictionary):
 
 	if selected_position < grid.get_child_count():
 		var card = grid.get_child(selected_position - 1)
+		card.flip()
 		card.modulate = Color(0.6, 1.0, 0.6)
 
 	var tier = reward.get("tier","")
