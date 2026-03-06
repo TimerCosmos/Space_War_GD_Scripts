@@ -100,6 +100,7 @@ func load_item(index: int):
 	if current_preview:
 		current_preview.queue_free()
 
+	current_index = index
 	current_item = items[index]
 
 	if mode == GarageMode.SHIPS:
@@ -117,6 +118,9 @@ func load_item(index: int):
 
 		if is_owned:
 			select.visible = true
+			if GameState.user.default_spaceship_id == backend_ship.id:
+				select.disabled = true
+				select.text = "Selected"
 			buy_button.visible = false
 		else:
 			select.visible = false
@@ -149,6 +153,7 @@ func load_item(index: int):
 			return
 
 		current_preview = resource_data.scene_path.instantiate()
+		
 		current_preview.apply_data(resource_data, backend_drone)
 		is_owned = GameState.return_owned_or_not("Drones", backend_drone.id)
 
@@ -180,6 +185,7 @@ func load_item(index: int):
 	current_preview.global_transform = pivot.global_transform
 	pivot.rotation = Vector3.ZERO
 
+	update_action_buttons()
 	update_button_states()
 	update_upgrade_visibility()
 
@@ -191,6 +197,53 @@ func get_user_balance(resource_type: String) -> int:
 			return GameState.user.diamonds
 		_:
 			return 0
+
+
+func update_action_buttons():
+	select.visible = false
+	select.disabled = false
+	select.text = "Select"
+
+	buy_button.visible = false
+	buy_button.disabled = false
+	buy_button.text = "Buy"
+
+	if current_item == null:
+		return
+
+	if is_owned:
+		select.visible = true
+
+		if is_current_item_selected():
+			select.disabled = true
+			select.text = "Selected"
+
+		return
+
+	buy_button.visible = true
+
+	var resource_type = current_item.resource_type
+	var item_cost = int(current_item.cost)
+	var balance = get_user_balance(resource_type)
+	var suffix := ""
+
+	if resource_type == "COINS":
+		suffix = " Coins"
+	elif resource_type == "DIAMONDS":
+		suffix = " Diamonds"
+
+	buy_button.text = "Buy " + str(item_cost) + suffix
+	buy_button.disabled = balance < item_cost
+
+
+func is_current_item_selected() -> bool:
+	if current_item == null or GameState.user == null:
+		return false
+
+	if mode == GarageMode.SHIPS:
+		return GameState.user.default_spaceship_id == current_item.id
+
+	return GameState.user.default_drone_id == current_item.id
 			
 # -------------------------------------------------
 # Buttons
@@ -242,7 +295,10 @@ func _on_buy_done(code, response_text):
 	# 2️⃣ Update Owned Ships
 	# ----------------------------------
 
-	GameState.owned_ship_ids = json.get("owned_ship_ids", [])
+	if mode == GarageMode.SHIPS:
+		GameState.owned_ship_ids = json.get("owned_ship_ids", [])
+	else:
+		GameState.owned_drone_ids = json.get("owned_drone_ids", [])
 
 	# ----------------------------------
 	# 3️⃣ Update Local Current Item Data
@@ -269,9 +325,7 @@ func _on_buy_done(code, response_text):
 	# ----------------------------------
 
 	is_owned = true
-	select.visible = true
-	buy_button.visible = false
-
+	update_action_buttons()
 	update_upgrade_visibility()
 
 func apply_upgrade_preview(json):
@@ -360,7 +414,8 @@ func _on_default_ship_updated(code, response_text):
 	# Update ShipManager
 	ShipManager.selected_ship_id = GameState.user.default_spaceship_id
 
-	SceneManager.goto_scene("res://Scenes/game.tscn")
+	update_action_buttons()
+	SceneManager.goto_scene("res://Scenes/main_menu.tscn")
 
 func _on_default_drone_updated(code, response_text):
 
@@ -375,6 +430,9 @@ func _on_default_drone_updated(code, response_text):
 	GameState.user = UserProfile.from_dict(json)
 
 	DroneManager.selected_drone_id = GameState.user.default_drone_id
+
+	update_action_buttons()
+	SceneManager.goto_scene("res://Scenes/main_menu.tscn")
 	
 func load_animation():
 	animation_player.play("shippivot")

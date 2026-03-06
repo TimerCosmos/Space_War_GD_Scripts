@@ -4,7 +4,6 @@ extends Control
 
 @onready var settings_pop_up: PopupPanel = $SettingsPopUp
 @onready var settings: Button = $MarginContainer/Settings/Settings
-@onready var destroyer: CharacterBody3D = $"../../destroyer"
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 

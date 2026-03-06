@@ -17,5 +17,20 @@ func _on_pressed() -> void:
 	animation_player.play("start_game_transition")
 
 func _on_animation_player_animation_finished(anim_name):
-	if anim_name == "start_game_transition":
-		SceneManager.goto_scene("res://Scenes/game.tscn")
+	DropService.load_drop_groups(_on_drop_groups_loaded)
+		
+func _on_drop_groups_loaded(code, body):
+
+	if code != 200:
+		print("Failed to load drop groups")
+		return
+
+	var json = JSON.parse_string(body)
+
+	if json == null:
+		print("Invalid JSON")
+		return
+
+	GameState.drop_groups = json["drop_groups"]
+
+	SceneManager.goto_scene("res://Scenes/game.tscn")

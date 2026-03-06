@@ -19,7 +19,7 @@ var all_drones: Array[Drone] = []
 var all_enemies : Array[Enemy] = []
 var owned_ship_ids: Array[String] = []
 var owned_drone_ids: Array[String] = []
-
+var drop_groups = []
 func set_session(token: String, user: Dictionary):
 	access_token = token
 	user_data = UserProfile.from_dict(user)
@@ -56,7 +56,6 @@ func get_ship_by_id(id: String):
 func return_owned_or_not(mode:String, id:String):
 	if mode == "Ships":
 		for ship_id in owned_ship_ids:
-			print(id, ship_id)
 			if ship_id == id:
 				return true
 	else:
@@ -70,3 +69,40 @@ func update_resources(coins: int, exp: int, diamonds: int, level: int):
 	user.exp = exp
 	user.diamonds = diamonds
 	user.level = level
+
+func get_drop_group(name: String):
+	for g in drop_groups:
+		if g.name == name:
+			return g
+	return null
+
+
+func get_random_drop_item(group_name: String):
+
+	var group = get_drop_group(group_name)
+
+	if group == null:
+		return null
+
+	var total_weight := 0.0
+
+	for item in group.items:
+		if item.is_active:
+			total_weight += item.drop_chance_percent
+
+	if total_weight == 0:
+		return null
+
+	var roll = randf() * total_weight
+	var cumulative := 0.0
+
+	for item in group.items:
+		if not item.is_active:
+			continue
+
+		cumulative += item.drop_chance_percent
+
+		if roll <= cumulative:
+			return item
+
+	return group.items[0]

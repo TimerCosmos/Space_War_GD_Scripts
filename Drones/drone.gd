@@ -90,25 +90,24 @@ func _process(delta):
 # Shooting
 # ----------------------------
 func shoot():
+
 	if drone_data == null:
 		return
 
-	var enemies = get_tree().get_nodes_in_group("enemy")
-	if enemies.is_empty():
-		return
-
-	var target = enemies[randi() % enemies.size()]
-
 	var bullet_scene = preload("res://Scenes/Attacks/plasma.tscn")
+
 	var bullet = bullet_scene.instantiate()
+
 	get_tree().current_scene.add_child(bullet)
 
 	bullet.global_position = global_position
-	bullet.look_at(target.global_position, Vector3.UP)
 
-	# Pass damage dynamically
+	# target point straight ahead
+	var target = global_position + Vector3(0, 0, -100)
+
+	bullet.look_at(target, Vector3.UP)
+
 	bullet.damage = runtime_damage
-
 
 
 # ----------------------------

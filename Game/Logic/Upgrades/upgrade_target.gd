@@ -1,7 +1,7 @@
 extends Area3D
 
 @export var max_health := 100
-@export var fall_speed := 3.0
+@export var fall_speed := 1.0
 
 var health := 100
 var upgrade_type := ""
@@ -32,17 +32,20 @@ func _physics_process(delta):
 # ---------------------------------
 # Configure upgrade dynamically
 # ---------------------------------
-func configure(type: String, value: int):
-	upgrade_type = type
-	upgrade_value = value
-	
-	label.text = "+" + str(value) + " " + type.capitalize()
+
+func configure_from_backend(item: Dictionary):
+
+	upgrade_type = item["item_type"]
+	upgrade_value = int(item["value"])
+
+	max_health = int(item["health"])
+	health = max_health
+
+	label.text = "+" + str(upgrade_value) + " " + upgrade_type.capitalize()
 	label.scale = Vector3(2.5, 2.5, 2.5)
 	label.modulate = Color.WHITE
 
 	apply_visual_style()
-
-
 # ---------------------------------
 # Change color based on upgrade
 # ---------------------------------
@@ -70,7 +73,7 @@ func apply_visual_style():
 # ---------------------------------
 func take_damage(amount: int):
 	health -= amount
-	
+
 	if health <= 0:
 		activate_upgrade()
 		queue_free()
@@ -80,17 +83,19 @@ func take_damage(amount: int):
 # Activate upgrade
 # ---------------------------------
 func activate_upgrade():
+
 	var ship = get_tree().get_first_node_in_group("player")
-	
+
 	if ship == null:
 		return
-	
+
+	print(upgrade_type)
 	match upgrade_type:
-		"drone":
+		"Drones":
 			ship.add_drone(upgrade_value)
-		"damage":
+		"Damage":
 			ship.increase_damage(upgrade_value)
-		"health":
+		"Health":
 			ship.increase_health(upgrade_value)
 
 

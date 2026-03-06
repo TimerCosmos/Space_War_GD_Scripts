@@ -12,9 +12,6 @@ func _ready():
 	add_to_group("game_over")
 	visible = false
 	
-	restart.pressed.connect(_on_restart_pressed)
-	menu.pressed.connect(_on_menu_pressed)
-
 
 func show_game_over(final_score: int, time_survived: int):
 	if reward_requested:
