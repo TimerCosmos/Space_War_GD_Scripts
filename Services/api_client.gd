@@ -38,7 +38,6 @@ func _make_request(
 			var response_text: String = response_body.get_string_from_utf8()
 
 			if response_code == 401:
-				print("Unauthorized. Logging out.")
 				GameState.logout()
 				get_tree().change_scene_to_file("res://Scenes/Startup/login.tscn")
 				http.queue_free()

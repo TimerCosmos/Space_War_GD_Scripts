@@ -53,7 +53,7 @@ func _on_register_response(code, response_text):
 	GameState.set_session(token, user)
 
 
-	get_tree().change_scene_to_file("res://Scenes/Startup/loading.tscn")
+	get_tree().change_scene_to_file("res://Scenes/StartUp/loading.tscn")
 
 
 func show_error(message: String):
@@ -68,4 +68,4 @@ func save_token(token: String):
 
 
 func _on_BackToLoginButton_pressed():
-	get_tree().change_scene_to_file("res://Scenes/Startup/login.tscn")
+	get_tree().change_scene_to_file("res://Scenes/StartUp/login.tscn")

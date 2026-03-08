@@ -4,10 +4,10 @@ func _ready():
 	var token = load_token()
 
 	if token == "":
-		get_tree().change_scene_to_file("res://Scenes/Startup/login.tscn")
+		get_tree().change_scene_to_file("res://Scenes/StartUp/login.tscn")
 	else:
 		GameState.access_token = token
-		get_tree().change_scene_to_file("res://Scenes/Startup/loading.tscn")
+		get_tree().change_scene_to_file("res://Scenes/StartUp/loading.tscn")
 
 
 func load_token() -> String:

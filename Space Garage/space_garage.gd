@@ -29,7 +29,8 @@ var is_owned := false
 @onready var hit_points: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Points Label"
 @onready var damage: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Damage Label"
 @onready var hit_rate: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Rate Label"
-@onready var title: Label = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/Back/Title
+@onready var title: Label = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/Back/TitleContainer/Title
+@onready var rarity_label: Label = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/Back/TitleContainer/Rarity
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 @onready var glow_frame: ColorRect = $CanvasLayer/Control/GlowFrame
 
@@ -87,6 +88,7 @@ func load_data():
 
 func update_stats_display(data):
 	title.text = data.name
+	rarity_label.text = current_item.rarity
 	hit_points.text = "Health: " + str(data.base_health)
 	damage.text = "Damage: " + str(data.base_damage)
 	hit_rate.text = "Hit Rate: " + str(data.base_hit_rate)
@@ -115,7 +117,6 @@ func load_item(index: int):
 		current_preview = resource_data.ship_scene.instantiate()
 		current_preview.apply_data(resource_data, backend_ship)
 		is_owned = GameState.return_owned_or_not("Ships", backend_ship.id)
-
 		if is_owned:
 			select.visible = true
 			if GameState.user.default_spaceship_id == backend_ship.id:
@@ -129,11 +130,10 @@ func load_item(index: int):
 			var resource_type = backend_ship.resource_type
 			var item_cost = int(backend_ship.cost)
 			var balance = get_user_balance(resource_type)
-			
 			var emoji = ""
-			if resource_type == "COINS":
+			if resource_type == "Coins":
 				emoji = " 🪙"
-			elif resource_type == "DIAMONDS":
+			elif resource_type == "Diamonds":
 				emoji = " 💎"
 			
 			buy_button.text = "Buy " + str(item_cost) + emoji
@@ -169,9 +169,9 @@ func load_item(index: int):
 			var balance = get_user_balance(resource_type)
 			
 			var emoji = ""
-			if resource_type == "COINS":
+			if resource_type == "Coins":
 				emoji = " 🪙"
-			elif resource_type == "DIAMONDS":
+			elif resource_type == "Diamonds":
 				emoji = " 💎"
 			
 			buy_button.text = "Buy " + str(item_cost) + emoji
@@ -267,7 +267,6 @@ func _on_buy_button_pressed():
 func _on_buy_done(code, response_text):
 
 	if code != 200:
-		print("Buy failed")
 		return
 
 	var json = JSON.parse_string(response_text)
@@ -275,7 +274,6 @@ func _on_buy_done(code, response_text):
 		return
 
 	if not json.get("success", false):
-		print("Purchase failed:", json.get("message", ""))
 		return
 
 	# ----------------------------------
@@ -401,7 +399,6 @@ func _on_select_button_pressed():
 func _on_default_ship_updated(code, response_text):
 
 	if code != 200:
-		print("Failed to set default ship")
 		return
 
 	var json = JSON.parse_string(response_text)
@@ -420,7 +417,6 @@ func _on_default_ship_updated(code, response_text):
 func _on_default_drone_updated(code, response_text):
 
 	if code != 200:
-		print("Failed to set default drone")
 		return
 
 	var json = JSON.parse_string(response_text)
@@ -485,6 +481,7 @@ func apply_rarity_glow(rarity: int):
 	mat.set_shader_parameter("intensity", 3.5)
 
 	title.add_theme_color_override("font_color", color)
+	rarity_label.add_theme_color_override("font_color", color)
 func apply_galactic_shader():
 
 	var shader := Shader.new()
@@ -707,7 +704,6 @@ func load_upgrade_preview():
 func _on_upgrade_preview_loaded(code, response_text):
 
 	if code != 200:
-		print("Upgrade preview failed")
 		return
 
 	var json = JSON.parse_string(response_text)
@@ -800,10 +796,7 @@ func upgrade_stat(stat_type: String):
 
 func _on_upgrade_done(code, response_text):
 
-	print("Upgrade response:", code, response_text)
-
 	if code != 200:
-		print("Upgrade failed")
 		return
 
 	var json = JSON.parse_string(response_text)
@@ -811,7 +804,6 @@ func _on_upgrade_done(code, response_text):
 		return
 
 	if not json.get("success", false):
-		print("Upgrade not successful:", json.get("message", ""))
 		return
 
 	# -------------------------

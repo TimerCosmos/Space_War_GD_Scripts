@@ -33,7 +33,6 @@ func _on_LoginButton_pressed():
 
 func _on_login_response(code, response_text):
 	login_button.disabled = false
-
 	if code != 200:
 		var json = JSON.parse_string(response_text)
 		
@@ -59,14 +58,13 @@ func _on_login_response(code, response_text):
 
 	save_token(token)
 	GameState.set_session(token, user)
-	print(user)
-	get_tree().change_scene_to_file("res://Scenes/Startup/loading.tscn")
+	get_tree().change_scene_to_file("res://Scenes/StartUp/loading.tscn")
 
 func show_register_option():
 	register.visible = true
 	
 func _on_RegisterButton_pressed():
-	get_tree().change_scene_to_file("res://Scenes/Startup/register.tscn")
+	get_tree().change_scene_to_file("res://Scenes/StartUp/register.tscn")
 
 func show_error(message: String):
 	error_label.text = message

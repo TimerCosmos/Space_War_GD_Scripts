@@ -16,7 +16,7 @@ func _on_bootstrap_loaded(code, response_text):
 	# ---------------------------
 	if code == 401:
 		GameState.logout()
-		get_tree().change_scene_to_file("res://Scenes/Startup/login.tscn")
+		get_tree().change_scene_to_file("res://Scenes/StartUp/login.tscn")
 		return
 
 	# ---------------------------
@@ -37,11 +37,11 @@ func _on_bootstrap_loaded(code, response_text):
 
 func _parse_bootstrap(data: Dictionary):
 
+	print(data.get("offers"))
 	# ---------------------------
 	# USER
 	# ---------------------------
 	GameState.user = UserProfile.from_dict(data.get("user", {}))
-	
 	# ---------------------------
 	# SHIPS
 	# ---------------------------
@@ -80,7 +80,29 @@ func _parse_bootstrap(data: Dictionary):
 	GameState.owned_drone_ids = []
 	for id in data.get("owned_drone_ids", []):
 		GameState.owned_drone_ids.append(str(id))
-		
+	
+	# ---------------------------
+# NOTICES / UNCLAIMED REWARDS
+# ---------------------------
+
+# ---------------------------
+# UNCLAIMED LEVEL REWARDS
+# ---------------------------
+
+	GameState.unclaimed_level_rewards.clear()
+
+	var rewards_block = data.get("unclaimed_rewards", {})
+
+	var notices = rewards_block.get("notices", [])
+
+	for notice in notices:
+		if notice.get("category") == "unclaimed_level_rewards":
+			var payload = notice.get("payload",{})
+			var details = payload.get("details", [])
+			for reward in details:
+				GameState.unclaimed_level_rewards.append(reward)
+
+
 	_initialize_equipment()
 
 func _initialize_equipment():

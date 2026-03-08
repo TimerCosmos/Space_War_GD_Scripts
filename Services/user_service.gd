@@ -112,3 +112,6 @@ static func pick_card(round_id:String, payload, Callback:Callable):
 	
 static func claim_result(id,Callback:Callable):
 	ApiClient.post_with_auth( "/api/v1/card-draw/pending/%s/claim" % id,{},Callback)
+	
+static func claim_level_rewards(callback: Callable):
+	ApiClient.post_with_auth("/api/v1/users/rewards/levels/claim", {}, callback)

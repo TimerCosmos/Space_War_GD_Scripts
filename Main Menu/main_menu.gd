@@ -9,8 +9,14 @@ var current_ship: SpaceShip = null
 
 
 func _ready():
+	if GameState.unclaimed_level_rewards.size() > 0:
+		var popup_scene = preload("res://Scenes/UI/reward_popup.tscn")
+		var popup = popup_scene.instantiate()
+
+		add_child(popup)
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	spawn_menu_ship()
+	AudioManager.play_music()
 
 
 func spawn_menu_ship():

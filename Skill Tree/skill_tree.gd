@@ -53,7 +53,7 @@ func _on_catalog_loaded(code, response_text):
 	if json == null:
 		return
 	skill_points_icon.custom_minimum_size = Vector2(30, 30)
-	skill_points.text = str(GameState.user.exp_tokens)
+	skill_points.text = str(GameState.user.achievement_points)
 	populate_sections(json.get("upgrades", []))
 
 
@@ -194,15 +194,27 @@ func _on_reset_pressed():
 func _on_reset_response(code, response_text):
 
 	if code != 200:
-		print("Reset failed")
 		return
+	var data = JSON.parse_string(response_text)
 
+	if data == null:
+		return
+	var points = data["user_economy"]["ACHIEVEMENTPOINTS"]
+	GameState.set_achievement_points(int(points))
 	load_catalog()  # refresh UI
 
 func _on_upgrade_response(code, response_text):
 
 	if code != 200:
-		print("Upgrade failed")
 		return
 
-	load_catalog()  # refresh everything
+	var data = JSON.parse_string(response_text)
+
+	if data == null:
+		return
+
+	var points = data["user_economy"]["ACHIEVEMENTPOINTS"]
+
+	GameState.set_achievement_points(int(points))
+
+	load_catalog() # refresh everything

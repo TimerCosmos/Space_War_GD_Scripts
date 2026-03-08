@@ -20,6 +20,8 @@ var all_enemies : Array[Enemy] = []
 var owned_ship_ids: Array[String] = []
 var owned_drone_ids: Array[String] = []
 var drop_groups = []
+var unclaimed_level_rewards: Array = []
+
 func set_session(token: String, user: Dictionary):
 	access_token = token
 	user_data = UserProfile.from_dict(user)
@@ -106,3 +108,15 @@ func get_random_drop_item(group_name: String):
 			return item
 
 	return group.items[0]
+
+func set_coins(coins : int):
+	user.coins = coins
+
+func set_diamonds(diamonds : int):
+	user.diamonds = diamonds
+	
+func set_xp(xp : int):
+	user.exp = xp
+	
+func set_achievement_points(achievement_points : int):
+	user.achievement_points = achievement_points

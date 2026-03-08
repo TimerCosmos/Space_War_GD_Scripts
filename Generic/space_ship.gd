@@ -28,6 +28,7 @@ var runtime_speed: float
 var bonus_damage: int = 0
 var bonus_health: int = 0
 
+var bullet_sfx = preload("res://Assets/Sound Tracks/SFX/GunShot.mp3")
 # --------------------------------
 # Battlefield movement limits
 # --------------------------------
@@ -157,7 +158,8 @@ func _unhandled_input(event):
 
 	if is_holding and event is InputEventMouseMotion:
 
-		var new_x = global_position.x + event.relative.x * runtime_speed * 0.01
+		var sens = lerp(0.3, 2.0, UserSettingsManager.sensitivity)
+		var new_x = global_position.x + event.relative.x * runtime_speed * 0.01 * sens
 
 		new_x = clamp(new_x, min_x, max_x)
 
@@ -205,7 +207,7 @@ func shoot():
 		bullet.global_transform = muzzle.global_transform
 
 		bullet.damage = runtime_damage
-
+	AudioManager.play_sfx(bullet_sfx)
 
 # -------------------------------------------------
 # Drone System

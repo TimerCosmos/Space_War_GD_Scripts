@@ -22,13 +22,11 @@ func _on_animation_player_animation_finished(anim_name):
 func _on_drop_groups_loaded(code, body):
 
 	if code != 200:
-		print("Failed to load drop groups")
 		return
 
 	var json = JSON.parse_string(body)
 
 	if json == null:
-		print("Invalid JSON")
 		return
 
 	GameState.drop_groups = json["drop_groups"]

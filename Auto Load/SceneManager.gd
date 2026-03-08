@@ -16,5 +16,3 @@ func go_back():
 	if scene_history.size() > 0:
 		var previous_scene = scene_history.pop_back()
 		get_tree().change_scene_to_file(previous_scene)
-	else:
-		print("No history available!")

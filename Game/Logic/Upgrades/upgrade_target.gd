@@ -88,8 +88,6 @@ func activate_upgrade():
 
 	if ship == null:
 		return
-
-	print(upgrade_type)
 	match upgrade_type:
 		"Drones":
 			ship.add_drone(upgrade_value)
