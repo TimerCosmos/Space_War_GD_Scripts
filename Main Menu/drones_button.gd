@@ -12,4 +12,4 @@ func _process(delta: float) -> void:
 
 func _on_drones_pressed():
 	GameState.garage_mode = GameState.GarageMode.DRONES
-	SceneManager.goto_scene("res://Scenes/Space_Garage.tscn")
+	SceneManager.goto_scene("res://Scenes/space_garage.tscn")

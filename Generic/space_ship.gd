@@ -201,7 +201,7 @@ func shoot():
 	for muzzle in muzzles:
 
 		var bullet = ship_data.bullet_scene.instantiate()
-
+		bullet.can_hit_upgrades = true
 		get_tree().current_scene.add_child(bullet)
 
 		bullet.global_transform = muzzle.global_transform

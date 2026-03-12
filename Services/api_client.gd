@@ -1,6 +1,6 @@
 extends Node
 
-const BASE_URL := "http://127.0.0.1:8000"
+const BASE_URL := "https://spacewar-backend-869284059337.asia-south1.run.app"
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 # -------------------------------------------------
@@ -38,11 +38,10 @@ func _make_request(
 			var response_text: String = response_body.get_string_from_utf8()
 
 			if response_code == 401:
-				GameState.logout()
-				get_tree().change_scene_to_file("res://Scenes/Startup/login.tscn")
+				if callback.is_valid():
+					callback.call(response_code, response_text)
 				http.queue_free()
 				return
-
 			if callback.is_valid():
 				callback.call(response_code, response_text)
 

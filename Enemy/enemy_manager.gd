@@ -20,7 +20,7 @@ var spawn_timer := 0.0
 var spawn_rate := 0.05
 
 
-const FRONT_LIMIT_Z := -20.0
+const FRONT_LIMIT_Z := -25.0
 const BACK_LIMIT_Z := -120.0
 
 @export var battlefield_width := 20.0

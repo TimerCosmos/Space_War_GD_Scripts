@@ -137,7 +137,6 @@ func load_item(index: int):
 				emoji = " 💎"
 			
 			buy_button.text = "Buy " + str(item_cost) + emoji
-			
 			buy_button.disabled = balance < item_cost
 		update_stats_display(backend_ship)
 		var rarity_enum = RarityEnum.from_string(current_item.rarity)
@@ -167,14 +166,12 @@ func load_item(index: int):
 			var resource_type = backend_drone.resource_type
 			var item_cost = int(backend_drone.cost)
 			var balance = get_user_balance(resource_type)
-			
 			var emoji = ""
 			if resource_type == "Coins":
 				emoji = " 🪙"
 			elif resource_type == "Diamonds":
 				emoji = " 💎"
-			
-			buy_button.text = "Buy " + str(item_cost) + emoji
+			buy_button.text = "Buy " + str(item_cost) +""+ str(emoji)
 			
 			buy_button.disabled = balance < item_cost
 		update_stats_display(backend_drone)
@@ -191,9 +188,9 @@ func load_item(index: int):
 
 func get_user_balance(resource_type: String) -> int:
 	match resource_type:
-		"COINS":
+		"Coins":
 			return GameState.user.coins
-		"DIAMONDS":
+		"Diamonds":
 			return GameState.user.diamonds
 		_:
 			return 0
@@ -249,10 +246,10 @@ func is_current_item_selected() -> bool:
 # Buttons
 # -------------------------------------------------
 func _on_buy_button_pressed():
-
+	print(is_owned)
 	if is_owned:
 		return
-	
+	print("buyable")
 	if mode == GarageMode.SHIPS:
 		UserService.buy_spaceship(
 			current_item.id,
@@ -294,9 +291,9 @@ func _on_buy_done(code, response_text):
 	# ----------------------------------
 
 	if mode == GarageMode.SHIPS:
-		GameState.owned_ship_ids = json.get("owned_ship_ids", [])
+		GameState.owned_ship_ids = Array(json.get("owned_ship_ids", []), TYPE_STRING, "", null)
 	else:
-		GameState.owned_drone_ids = json.get("owned_drone_ids", [])
+		GameState.owned_drone_ids = Array(json.get("owned_drone_ids", []), TYPE_STRING, "", null)
 
 	# ----------------------------------
 	# 3️⃣ Update Local Current Item Data
@@ -714,9 +711,9 @@ func _on_upgrade_preview_loaded(code, response_text):
 
 	var emoji = ""
 	match resource_type:
-		"COINS":
+		"Coins":
 			emoji = " 🪙"
-		"DIAMONDS":
+		"Diamonds":
 			emoji = " 💎"
 
 	# Reset UI

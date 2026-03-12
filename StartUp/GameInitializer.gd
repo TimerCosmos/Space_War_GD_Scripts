@@ -37,7 +37,6 @@ func _on_bootstrap_loaded(code, response_text):
 
 func _parse_bootstrap(data: Dictionary):
 
-	print(data.get("offers"))
 	# ---------------------------
 	# USER
 	# ---------------------------

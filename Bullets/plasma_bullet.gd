@@ -2,7 +2,7 @@ extends Area3D
 
 @export var speed := 60.0
 @export var life_time := 3.0
-
+var can_hit_upgrades : bool
 var damage : int = 0
 
 var enemy_manager = null
@@ -11,7 +11,6 @@ var enemy_manager = null
 func _ready():
 
 	add_to_group("player_bullet")
-
 	# upgrades are still CharacterBody3D
 	body_entered.connect(_on_body_entered)
 
@@ -25,7 +24,6 @@ func _process(delta):
 
 	# move bullet
 	global_position += -transform.basis.z * speed * delta
-	enemy_manager.check_hit(global_position, damage)
 	# check swarm enemies
 	if enemy_manager:
 
@@ -40,9 +38,8 @@ func _process(delta):
 # -----------------------------------
 func _on_body_entered(body):
 
-	if body.is_in_group("upgrade"):
+	if body.is_in_group("upgrade") and can_hit_upgrades:
 
 		if body.has_method("take_damage"):
 			body.take_damage(damage)
-
-	queue_free()
+		queue_free()

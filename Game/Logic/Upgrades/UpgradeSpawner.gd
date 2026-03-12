@@ -1,28 +1,27 @@
 extends Node3D
 
 @export var upgrade_scene: PackedScene
-@export var base_spacing := 2.2
+@export var base_spacing := 5.0
 @export var density_growth := 0.01
-@export var max_visible_upgrades := 40
 
 const FRONT_LIMIT_Z := -15.0
-const BACK_LIMIT_Z := -130.0
+const BACK_LIMIT_Z := -100.0
 
 const UPGRADE_PERCENT := 0.15
 
 var lane_center := 0.0
-var last_spawn_z := BACK_LIMIT_Z
 var time_alive := 0.0
-var spacing := 2.2
+var spacing := base_spacing
 
 
 func _ready():
 	await get_tree().process_frame
-	spacing = base_spacing
 	setup_lane()
 	prefill_lane()
 
 
+# ---------------------------------------
+# Setup lane position
 # ---------------------------------------
 
 func setup_lane():
@@ -43,18 +42,20 @@ func setup_lane():
 
 
 # ---------------------------------------
+# Prefill lane initially
+# ---------------------------------------
 
 func prefill_lane():
 
 	var z := BACK_LIMIT_Z
 
-	while z <= FRONT_LIMIT_Z and get_upgrade_count() < max_visible_upgrades:
+	while z <= FRONT_LIMIT_Z:
 		spawn_upgrade(z)
 		z += spacing
 
-	last_spawn_z = z - spacing
 
-
+# ---------------------------------------
+# Maintain spacing as upgrades move
 # ---------------------------------------
 
 func _process(delta):
@@ -62,40 +63,62 @@ func _process(delta):
 	time_alive += delta
 	update_density()
 
-	var front = get_front_upgrade_z()
+	var farthest = get_farthest_upgrade_z()
 
-	while front - last_spawn_z > spacing and get_upgrade_count() < max_visible_upgrades:
-		last_spawn_z -= spacing
-		spawn_upgrade(last_spawn_z)
+	while -1 * (BACK_LIMIT_Z - farthest) >= spacing:
+		farthest -= spacing
+		spawn_upgrade(farthest)
 
-
+# ---------------------------------------
+# Spawn upgrade
 # ---------------------------------------
 
 func spawn_upgrade(z_pos):
-	if get_upgrade_count() >= max_visible_upgrades:
-		return
 
 	var upgrade = upgrade_scene.instantiate()
 
 	get_tree().current_scene.add_child(upgrade)
 
-	upgrade.global_position = Vector3(lane_center,0,z_pos)
+	upgrade.global_position = Vector3(lane_center, 0, z_pos)
 
 	var group_name = get_active_drop_group()
-
 	var item = GameState.get_random_drop_item(group_name)
 
-	if item == null:
-		return
+	if item != null:
+		upgrade.configure_from_backend(item)
 
-	upgrade.configure_from_backend(item)
 
+# ---------------------------------------
+# Find farthest upgrade (most negative Z)
+# ---------------------------------------
+
+func get_farthest_upgrade_z():
+
+	var upgrades = get_tree().get_nodes_in_group("upgrade")
+
+	if upgrades.is_empty():
+		return FRONT_LIMIT_Z
+
+	var farthest = upgrades[0].global_position.z
+
+	for u in upgrades:
+		if u.global_position.z < farthest:
+			farthest = u.global_position.z
+
+	return farthest
+
+
+# ---------------------------------------
+# Density increases over time
+# ---------------------------------------
 
 func update_density():
 
 	spacing = base_spacing / (1.0 + time_alive * density_growth)
 
 
+# ---------------------------------------
+# Choose drop group
 # ---------------------------------------
 
 func get_active_drop_group():
@@ -113,25 +136,3 @@ func get_active_drop_group():
 		return "Intermediate"
 	else:
 		return "Boss"
-
-
-# ---------------------------------------
-
-func get_front_upgrade_z():
-
-	var upgrades = get_tree().get_nodes_in_group("upgrade")
-
-	if upgrades.is_empty():
-		return FRONT_LIMIT_Z
-
-	var closest = upgrades[0].global_position.z
-
-	for u in upgrades:
-		if u.global_position.z > closest:
-			closest = u.global_position.z
-
-	return closest
-
-
-func get_upgrade_count() -> int:
-	return get_tree().get_nodes_in_group("upgrade").size()

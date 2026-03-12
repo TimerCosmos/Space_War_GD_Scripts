@@ -97,7 +97,7 @@ func shoot():
 	var bullet_scene = preload("res://Scenes/Attacks/plasma.tscn")
 
 	var bullet = bullet_scene.instantiate()
-
+	bullet.can_hit_upgrades = false
 	get_tree().current_scene.add_child(bullet)
 
 	bullet.global_position = global_position
