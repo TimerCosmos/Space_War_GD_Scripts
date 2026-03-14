@@ -115,3 +115,6 @@ static func claim_result(id,Callback:Callable):
 	
 static func claim_level_rewards(callback: Callable):
 	ApiClient.post_with_auth("/api/v1/users/rewards/levels/claim", {}, callback)
+	
+static func get_shop_items(callback : Callable):
+	ApiClient.get_with_auth("/api/v1/shop/items", callback)

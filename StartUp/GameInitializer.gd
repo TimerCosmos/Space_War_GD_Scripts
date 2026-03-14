@@ -16,7 +16,7 @@ func _on_bootstrap_loaded(code, response_text):
 	# ---------------------------
 	if code == 401:
 		GameState.logout()
-		get_tree().change_scene_to_file("res://Scenes/StartUp/login.tscn")
+		get_tree().change_scene_to_file("res://Scenes/StartUp/auth_check.tscn")
 		return
 
 	# ---------------------------
@@ -49,7 +49,7 @@ func _parse_bootstrap(data: Dictionary):
 		GameState.all_ships.append(
 			Spaceship.from_dict(ship_dict)
 		)
-
+	
 	# ---------------------------
 	# DRONES
 	# ---------------------------
@@ -79,10 +79,13 @@ func _parse_bootstrap(data: Dictionary):
 	GameState.owned_drone_ids = []
 	for id in data.get("owned_drone_ids", []):
 		GameState.owned_drone_ids.append(str(id))
-	
-	# ---------------------------
-# NOTICES / UNCLAIMED REWARDS
-# ---------------------------
+
+	GameState.ad_limits.clear()
+
+	for ad_dict in data.get("ads", []):
+		var ad = Ad.from_dict(ad_dict)
+		GameState.ad_limits[ad.type] = ad
+
 
 # ---------------------------
 # UNCLAIMED LEVEL REWARDS
@@ -101,7 +104,23 @@ func _parse_bootstrap(data: Dictionary):
 			for reward in details:
 				GameState.unclaimed_level_rewards.append(reward)
 
+# ---------------------------
+# OFFERS
+# ---------------------------
 
+	GameState.offers.clear()
+
+	for offer in data.get("offers", []):
+		GameState.offers.append(offer)
+
+	# ---------------------------
+	# USER OFFERS
+	# ---------------------------
+
+	GameState.user_offers.clear()
+
+	for offer in data.get("user_offers", []):
+		GameState.user_offers.append(offer)
 	_initialize_equipment()
 
 func _initialize_equipment():

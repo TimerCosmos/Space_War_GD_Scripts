@@ -1,7 +1,6 @@
-# Api call is not needed
-
 extends Node
-
+signal economy_updated
+signal ads_updated
 var selected_ship_data = null
 var selected_drone_data: DroneData
 
@@ -21,7 +20,16 @@ var owned_ship_ids: Array[String] = []
 var owned_drone_ids: Array[String] = []
 var drop_groups = []
 var unclaimed_level_rewards: Array = []
+var ad_limits : Dictionary = {}
+static var offers: Array = []
+static var user_offers: Array = []
+var game_version : String = ""
+var admob_app_id = "ca-app-pub-3940256099942544~3347511713"
 
+var admob_rewarded = {
+	"coins": "ca-app-pub-3940256099942544/5224354917",
+	"diamonds": "ca-app-pub-3940256099942544/5224354917"
+}
 func set_session(token: String, user: Dictionary):
 	access_token = token
 	user_data = UserProfile.from_dict(user)

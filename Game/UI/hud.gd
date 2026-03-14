@@ -11,6 +11,7 @@ var DroneCount: int = 0
 
 func _ready():
 	add_to_group("hud")
+	damage.text = ""
 
 func set_max_health(max_hp: int):
 	health_bar.max_value = max_hp

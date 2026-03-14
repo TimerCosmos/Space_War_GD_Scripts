@@ -7,6 +7,7 @@ extends Node3D
 @onready var ship_pivot: Node3D = $ShipPivot
 @onready var enemy_manager = $EnemyManager
 @onready var game_over: Control = $CanvasLayer/GameOver
+@onready var damage: Label = $CanvasLayer/HUD/VBoxContainer/Damage
 
 var ship_instance: SpaceShip = null
 
@@ -88,7 +89,7 @@ func spawn_player_ship():
 	ship_instance = resource_data.ship_scene.instantiate()
 	ship_pivot.add_child(ship_instance)
 	ship_instance.global_transform = ship_pivot.global_transform
-
+	damage.text = "Damage : "+str(backend_ship.base_damage) 
 	ship_instance.apply_data(resource_data, backend_ship, player_data)
 
 	ship_instance.health_changed.connect(_on_health_changed)
