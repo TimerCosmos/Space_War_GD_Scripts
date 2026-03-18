@@ -1,4 +1,4 @@
-extends Node
+extends Control	
 
 func _ready():
 	GameInitializer.initialize(_on_bootstrap_ready)

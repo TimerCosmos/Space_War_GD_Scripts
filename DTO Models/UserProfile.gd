@@ -2,7 +2,7 @@ class_name UserProfile
 extends RefCounted
 
 var id: String
-var email: String
+var email: Variant
 var name: String
 var default_spaceship_id: String
 var default_drone_id: String
@@ -19,7 +19,7 @@ var created_at: String
 
 static func from_dict(data: Dictionary) -> UserProfile:
 	var user = UserProfile.new()
-
+	print(data)
 	user.id = data.get("id", "")
 	user.email = data.get("email", "")
 	user.name = data.get("name", "")

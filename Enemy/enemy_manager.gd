@@ -1,16 +1,17 @@
 extends Node3D
-class SwarmEnemy:
 
+class SwarmEnemy:
 	var position: Vector3
 	var velocity: Vector3
 	var hp: int
 	var damage: int
 	var alive := true
 	var chaos_offset: float
-	
-@export var max_enemies := 20000
-@export var enemy_mesh: Mesh
 
+# 🔥 Reduced for mobile safety
+@export var max_enemies := 1000
+@export var enemy_texture: Texture2D
+const ENEMY_TILT := deg_to_rad(-40.0)
 var player: Node3D
 
 var enemies := []
@@ -19,40 +20,59 @@ var multimesh := MultiMesh.new()
 var spawn_timer := 0.0
 var spawn_rate := 0.05
 
-
 const FRONT_LIMIT_Z := -25.0
 const BACK_LIMIT_Z := -120.0
 
 @export var battlefield_width := 20.0
+
 # ------------------------------------------------
-# Ready
+# READY
 # ------------------------------------------------
 
 func _ready():
 
 	add_to_group("enemy_manager")
 
+	# -----------------------------
+	# BILLBOARD MESH SETUP
+	# -----------------------------
+	var quad := QuadMesh.new()
+	quad.size = Vector2(4, 3)
+
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = enemy_texture
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	#mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+
+	quad.material = mat
+
 	multimesh.transform_format = MultiMesh.TRANSFORM_3D
 	multimesh.instance_count = max_enemies
-	multimesh.mesh = enemy_mesh
+	multimesh.mesh = quad
+
 	$MultiMeshInstance3D.multimesh = multimesh
 
+	# hide all initially
 	for i in range(max_enemies):
 		hide_enemy(i)
 
 	prefill_battlefield()
 
 
+# ------------------------------------------------
+# PREFILL
+# ------------------------------------------------
+
 func prefill_battlefield():
 
 	var rows := 40
-	var columns := 30
+	var columns := 25   # slightly reduced
 
 	var z_step = (BACK_LIMIT_Z - FRONT_LIMIT_Z) / rows
 	var x_step = battlefield_width / columns
 
 	for r in range(rows):
-
 		for c in range(columns):
 
 			if enemies.size() >= max_enemies:
@@ -68,8 +88,9 @@ func prefill_battlefield():
 			if dto != null:
 				spawn_enemy(pos, dto)
 
+
 # ------------------------------------------------
-# Main Loop
+# MAIN LOOP
 # ------------------------------------------------
 
 func _process(delta):
@@ -84,7 +105,7 @@ func _process(delta):
 
 
 # ------------------------------------------------
-# Spawn Enemy Using Backend Data
+# SPAWN
 # ------------------------------------------------
 
 func spawn_random_enemy():
@@ -122,13 +143,18 @@ func spawn_enemy(pos: Vector3, dto):
 	enemies.append(e)
 
 	var index = enemies.size() - 1
+
+	var scale = randf_range(1, 1.4)   # 🔥 slightly controlled
+
 	var t := Transform3D()
 	t.origin = e.position
+	t.basis = Basis().scaled(Vector3.ONE * scale)
+
 	multimesh.set_instance_transform(index, t)
 
 
 # ------------------------------------------------
-# Update Enemies
+# UPDATE
 # ------------------------------------------------
 
 func update_enemies(delta):
@@ -140,24 +166,15 @@ func update_enemies(delta):
 		if !e.alive:
 			continue
 
-		# forward movement
+		# forward
 		e.position += e.velocity * delta
 
-		# chaos swarm movement
+		# swarm chaos
 		var side = sin(Time.get_ticks_msec() * 0.002 + e.chaos_offset)
 		e.position.x += side * delta * 2
 
-		# simple crowd separation
-		if enemies.size() > 10:
-
-			var neighbor = enemies[randi() % enemies.size()]
-
-			if neighbor.alive:
-
-				var dist = e.position.distance_to(neighbor.position)
-
-				if dist < 0.5:
-					e.position.x += (e.position.x - neighbor.position.x) * delta
+		# clamp inside battlefield
+		e.position.x = clamp(e.position.x, -battlefield_width/2, battlefield_width/2)
 
 		# damage player
 		if player and e.position.distance_to(player.global_position) < 1.5:
@@ -166,16 +183,22 @@ func update_enemies(delta):
 
 			e.alive = false
 			hide_enemy(i)
+			continue
 
-		# update render transform
+		var depth_scale = clamp(2.0 - (abs(e.position.z) / 120.0), 1.0, 2.0)
+
+		var basis = Basis()
+		basis = basis.scaled(Vector3.ONE * depth_scale)
+
 		var t := Transform3D()
 		t.origin = e.position
+		t.basis = basis
 
 		multimesh.set_instance_transform(i, t)
 
 
 # ------------------------------------------------
-# Bullet Hit Detection
+# BULLET HIT
 # ------------------------------------------------
 
 func check_hit(bullet_pos: Vector3, damage: int) -> bool:
@@ -195,13 +218,13 @@ func check_hit(bullet_pos: Vector3, damage: int) -> bool:
 				e.alive = false
 				kill_enemy(i)
 
-			return true   # bullet hit something
+			return true
 
 	return false
 
 
 # ------------------------------------------------
-# Enemy Death
+# DEATH
 # ------------------------------------------------
 
 func kill_enemy(i):
@@ -223,7 +246,7 @@ func hide_enemy(i):
 
 
 # ------------------------------------------------
-# Backend Enemy Selection
+# BACKEND
 # ------------------------------------------------
 
 func get_random_enemy():
@@ -231,7 +254,6 @@ func get_random_enemy():
 	var total := 0.0
 
 	for e in GameState.all_enemies:
-
 		if e.is_active:
 			total += e.spawn_percentage
 

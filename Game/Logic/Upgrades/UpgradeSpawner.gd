@@ -1,7 +1,7 @@
 extends Node3D
 
 @export var upgrade_scene: PackedScene
-@export var base_spacing := 5.0
+@export var base_spacing := 10.0
 @export var density_growth := 0.01
 
 const FRONT_LIMIT_Z := -15.0

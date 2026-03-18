@@ -65,11 +65,11 @@ static func upgrade_spaceship(id: String, stat_type: String, upgrades_count: int
 		callback
 	)
 
-static func upgrade_drone(id: String, stat_type: String,upgrades_count: int, callback: Callable):
+static func upgrade_drone(id: String, stat_type: String, upgrades_count: int, callback: Callable):
 
 	var body = {
 		"stat_type": stat_type,
-		"upgrades_count" : upgrades_count
+		"upgrades_count": upgrades_count
 	}
 
 	ApiClient.post_with_auth(
@@ -78,43 +78,125 @@ static func upgrade_drone(id: String, stat_type: String,upgrades_count: int, cal
 		callback
 	)
 
+
+# -------------------------------------------------
+# BUY (FIXED BODY)
+# -------------------------------------------------
+
 static func buy_spaceship(id: String, callback: Callable):
+	var body = {
+		"buy": true,
+		"type": "spaceship"
+	}
+
 	ApiClient.post_with_auth(
 		"/api/v1/spaceships/%s/buy" % id,
-		{},
+		body,
 		callback
 	)
 
 static func buy_drone(id: String, callback: Callable):
+	var body = {
+		"buy": true,
+		"type": "drone"
+	}
+
 	ApiClient.post_with_auth(
 		"/api/v1/drones/%s/buy" % id,
-		{},
+		body,
 		callback
 	)
-	
-static func get_permanent_upgrade_catalog(callback: Callable):
-	ApiClient.get_with_auth("/api/v1/permanent-upgrades-v2/catalog", callback) 
-	
-static func reset_permanent_upgrades(callback : Callable):
-	ApiClient.post_with_auth("/api/v1/permanent-upgrades-v2/reset", {},callback)
-	
-static func buy_permanent_upgrade(Callback : Callable, permanent_upgrade_id : String):
-	ApiClient.post_with_auth("/api/v1/permanent-upgrades-v2/%s/upgrade" % permanent_upgrade_id, {}, Callback)
-	
-static func get_draw_state(Callback:Callable):
-	ApiClient.get_with_auth("/api/v1/card-draw/state", Callback)
-	
-static func start_round(Callback:Callable):
-	ApiClient.post_with_auth("/api/v1/card-draw/rounds/start", {},Callback)
 
-static func pick_card(round_id:String, payload, Callback:Callable):
-	ApiClient.post_with_auth("/api/v1/card-draw/rounds/%s/pick" % round_id, payload, Callback)
-	
-static func claim_result(id,Callback:Callable):
-	ApiClient.post_with_auth( "/api/v1/card-draw/pending/%s/claim" % id,{},Callback)
-	
+
+# -------------------------------------------------
+# Permanent Upgrades
+# -------------------------------------------------
+
+static func get_permanent_upgrade_catalog(callback: Callable):
+	ApiClient.get_with_auth("/api/v1/permanent-upgrades-v2/catalog", callback)
+
+
+static func reset_permanent_upgrades(callback: Callable):
+	var body = {
+		"reset": true
+	}
+
+	ApiClient.post_with_auth(
+		"/api/v1/permanent-upgrades-v2/reset",
+		body,
+		callback
+	)
+
+
+static func buy_permanent_upgrade(callback: Callable, permanent_upgrade_id: String):
+	var body = {
+		"upgrade": true,
+		"id": permanent_upgrade_id
+	}
+
+	ApiClient.post_with_auth(
+		"/api/v1/permanent-upgrades-v2/%s/upgrade" % permanent_upgrade_id,
+		body,
+		callback
+	)
+
+
+# -------------------------------------------------
+# Card Draw
+# -------------------------------------------------
+
+static func get_draw_state(callback: Callable):
+	ApiClient.get_with_auth("/api/v1/card-draw/state", callback)
+
+
+static func start_round(callback: Callable):
+	var body = {
+		"start": true
+	}
+
+	ApiClient.post_with_auth(
+		"/api/v1/card-draw/rounds/start",
+		body,
+		callback
+	)
+
+
+static func pick_card(round_id: String, payload, callback: Callable):
+	ApiClient.post_with_auth(
+		"/api/v1/card-draw/rounds/%s/pick" % round_id,
+		payload,
+		callback
+	)
+
+
+static func claim_result(id, callback: Callable):
+	var body = {
+		"claim": true
+	}
+
+	ApiClient.post_with_auth(
+		"/api/v1/card-draw/pending/%s/claim" % id,
+		body,
+		callback
+	)
+
+
+# -------------------------------------------------
+# Rewards / Shop
+# -------------------------------------------------
+
 static func claim_level_rewards(callback: Callable):
-	ApiClient.post_with_auth("/api/v1/users/rewards/levels/claim", {}, callback)
-	
-static func get_shop_items(callback : Callable):
+	var body = {
+		"claim": true,
+		"type": "level_rewards"
+	}
+
+	ApiClient.post_with_auth(
+		"/api/v1/users/rewards/levels/claim",
+		body,
+		callback
+	)
+
+
+static func get_shop_items(callback: Callable):
 	ApiClient.get_with_auth("/api/v1/shop/items", callback)

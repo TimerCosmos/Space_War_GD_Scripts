@@ -22,6 +22,8 @@ var is_owned := false
 # -------------------------------------------------
 # Node References
 # -------------------------------------------------
+const COIN_ICON = preload("res://Assets/Images/Coins.png")
+const DIAMOND_ICON = preload("res://Assets/Images/Diamonds.png")
 
 @onready var pivot: Node3D = $ShipPivot
 @onready var prev: Button = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/Prev
@@ -56,7 +58,17 @@ var is_owned := false
 @onready var damage_level_label: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Damage Level Label"
 @onready var hit_rate_level_label: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Rate Level Label"
 
+@onready var buy_label: Label = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/BuyButton/HBoxContainer/Label
+@onready var buy_icon: TextureRect = $CanvasLayer/Control/HBoxContainer/PreviewArea/MarginContainer/ShipScrolls/BuyButton/HBoxContainer/CurrencyIcon
 
+@onready var hp_label: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Points Button/HBoxContainer/Label"
+@onready var hp_icon: TextureRect = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Points Button/HBoxContainer/CurrencyIcon"
+
+@onready var dmg_label: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Damage Button/HBoxContainer/Label"
+@onready var dmg_icon: TextureRect = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Damage Button/HBoxContainer/CurrencyIcon"
+
+@onready var rate_label: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Rate Button/HBoxContainer/Label"
+@onready var rate_icon: TextureRect = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Rate Button/HBoxContainer/CurrencyIcon"
 # -------------------------------------------------
 # Ready
 # -------------------------------------------------
@@ -126,18 +138,7 @@ func load_item(index: int):
 		else:
 			select.visible = false
 			buy_button.visible = true
-			
-			var resource_type = backend_ship.resource_type
-			var item_cost = int(backend_ship.cost)
-			var balance = get_user_balance(resource_type)
-			var emoji = ""
-			if resource_type == "Coins":
-				emoji = " 🪙"
-			elif resource_type == "Diamonds":
-				emoji = " 💎"
-			
-			buy_button.text = "Buy " + str(item_cost) + emoji
-			buy_button.disabled = balance < item_cost
+		
 		update_stats_display(backend_ship)
 		var rarity_enum = RarityEnum.from_string(current_item.rarity)
 		apply_rarity_glow(rarity_enum)
@@ -162,18 +163,7 @@ func load_item(index: int):
 		else:
 			select.visible = false
 			buy_button.visible = true
-			
-			var resource_type = backend_drone.resource_type
-			var item_cost = int(backend_drone.cost)
-			var balance = get_user_balance(resource_type)
-			var emoji = ""
-			if resource_type == "Coins":
-				emoji = " 🪙"
-			elif resource_type == "Diamonds":
-				emoji = " 💎"
-			buy_button.text = "Buy " + str(item_cost) +""+ str(emoji)
-			
-			buy_button.disabled = balance < item_cost
+		
 		update_stats_display(backend_drone)
 		var rarity_enum = RarityEnum.from_string(current_item.rarity)
 		apply_rarity_glow(rarity_enum)
@@ -195,7 +185,6 @@ func get_user_balance(resource_type: String) -> int:
 		_:
 			return 0
 
-
 func update_action_buttons():
 	select.visible = false
 	select.disabled = false
@@ -203,7 +192,6 @@ func update_action_buttons():
 
 	buy_button.visible = false
 	buy_button.disabled = false
-	buy_button.text = "Buy"
 
 	if current_item == null:
 		return
@@ -214,24 +202,23 @@ func update_action_buttons():
 		if is_current_item_selected():
 			select.disabled = true
 			select.text = "Selected"
-
 		return
 
 	buy_button.visible = true
 
-	var resource_type = current_item.resource_type
+	var resource_type = current_item.resource_type.to_lower()
 	var item_cost = int(current_item.cost)
-	var balance = get_user_balance(resource_type)
-	var suffix := ""
+	var balance = get_user_balance(current_item.resource_type)
 
-	if resource_type == "COINS":
-		suffix = " Coins"
-	elif resource_type == "DIAMONDS":
-		suffix = " Diamonds"
+	buy_label.text = "Buy " + str(item_cost)
 
-	buy_button.text = "Buy " + str(item_cost) + suffix
-	buy_button.disabled = balance < item_cost
+	# Set icon
+	buy_icon.visible = true
+	buy_icon.texture = COIN_ICON if resource_type == "coins" else DIAMOND_ICON
 
+	var is_disabled = balance < item_cost
+
+	set_button_visual_state(buy_button, buy_icon, is_disabled)
 
 func is_current_item_selected() -> bool:
 	if current_item == null or GameState.user == null:
@@ -246,10 +233,8 @@ func is_current_item_selected() -> bool:
 # Buttons
 # -------------------------------------------------
 func _on_buy_button_pressed():
-	print(is_owned)
 	if is_owned:
 		return
-	print("buyable")
 	if mode == GarageMode.SHIPS:
 		UserService.buy_spaceship(
 			current_item.id,
@@ -707,19 +692,7 @@ func _on_upgrade_preview_loaded(code, response_text):
 	if json == null:
 		return
 
-	var resource_type = json.get("resource_type", "COINS")
-
-	var emoji = ""
-	match resource_type:
-		"Coins":
-			emoji = " 🪙"
-		"Diamonds":
-			emoji = " 💎"
-
-	# Reset UI
-	hit_points_button.disabled = true
-	damage_button.disabled = true
-	hit_rate_button.disabled = true
+	var resource_type = json.get("resource_type", "Coins").to_lower()
 
 	for stat in json.get("stat_previews", []):
 
@@ -728,47 +701,67 @@ func _on_upgrade_preview_loaded(code, response_text):
 		var upgrades_available = stat.get("upgrades_available", true)
 		var upgrades = stat.get("upgrades", [])
 		var current_level = int(stat.get("current_level", 1))
+
 		var button
 		var label
+		var icon
+		var value_label
 
 		match stat_type:
 			"health":
 				button = hit_points_button
-				label = hit_points_up_value
+				label = hp_label
+				icon = hp_icon
+				value_label = hit_points_up_value
 				hit_points_level_label.text = "Level: " + str(current_level)
 
 			"damage":
 				button = damage_button
-				label = damage_up_value
+				label = dmg_label
+				icon = dmg_icon
+				value_label = damage_up_value
 				damage_level_label.text = "Level: " + str(current_level)
 
 			"hit_rate":
 				button = hit_rate_button
-				label = hit_rate_up_value
+				label = rate_label
+				icon = rate_icon
+				value_label = hit_rate_up_value
 				hit_rate_level_label.text = "Level: " + str(current_level)
+
 			_:
 				continue
 
+		icon.visible = true
+
 		if not upgrades_available:
-			button.disabled = true
-			button.text = "MAXED"
-			label.text = ""
+			label.text = "MAX"
+			value_label.text = ""
+
+			icon.visible = false   # 🔥 KEY FIX
+
+			set_button_visual_state(button, icon, true)
 			continue
 
 		if upgrades.is_empty():
-			button.disabled = true
-			button.text = "-"
-			label.text = ""
+			label.text = "-"
+			value_label.text = ""
+			set_button_visual_state(button, icon, true)
 			continue
 
 		var step = upgrades[0]
-		var value = step.get("upgrade_value", 0)
 		var cost = int(step.get("cost", 0))
+		var value = step.get("upgrade_value", 0)
 
-		button.text = str(cost) + emoji
-		label.text = "+" + str(value)
+		label.text = str(cost)
+		value_label.text = "+" + str(value)
 
-		button.disabled = affordable <= 0
+		# Set icon texture
+		icon.texture = COIN_ICON if resource_type == "coins" else DIAMOND_ICON
+
+		var disabled = affordable <= 0
+		set_button_visual_state(button, icon, disabled)
+		
 func upgrade_stat(stat_type: String):
 
 	if not is_owned:
@@ -865,3 +858,15 @@ func update_upgrade_visibility():
 		load_upgrade_preview()
 	else:
 		grid_container.columns = 1
+
+
+func set_button_visual_state(button: Button, icon: TextureRect, disabled: bool):
+
+	var dim_color = Color(1,1,1,0.35)
+	var normal_color = Color(1,1,1,1)
+
+	button.disabled = disabled
+
+	var label = button.get_node("HBoxContainer/Label")
+	label.modulate = dim_color if disabled else normal_color
+	icon.modulate = dim_color if disabled else normal_color

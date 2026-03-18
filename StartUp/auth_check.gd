@@ -1,4 +1,4 @@
-extends Node
+extends Control
 
 var version := ""
 
@@ -22,7 +22,6 @@ func load_refresh_token() -> String:
 	var file = FileAccess.open("user://session.save", FileAccess.READ)
 	var data = JSON.parse_string(file.get_as_text())
 	file.close()
-
 	if data == null:
 		return ""
 	
@@ -52,7 +51,7 @@ func save_session(access_token:String, refresh_token:String):
 func create_guest():
 	ApiClient.post(
 		"/api/v1/auth/guest",
-		{},
+		{"guest": true},
 		func(code, body):
 			handle_auth_response(code, body)
 	)
@@ -98,7 +97,7 @@ func handle_auth_response(code:int, body:String):
 		#get_tree().change_scene_to_file("res://Scenes/StartUp/update_required.tscn")
 		return
 	save_session(access_token, refresh_token)
-
+	
 	get_tree().change_scene_to_file("res://Scenes/StartUp/loading.tscn")
 
 func check_version() -> bool:
