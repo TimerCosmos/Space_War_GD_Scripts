@@ -11,6 +11,7 @@ extends Node
 @onready var diamond_ads: Button = $ProfileBlock/DiamondsRow/DiamondAds
 @onready var gold_coin_ads_remaining: Label = $ProfileBlock/CoinsRow/CoinAdRemaining
 @onready var diamond_ads_remaining: Label = $ProfileBlock/DiamondsRow/DiamondAdRemaining
+@onready var high_score: Label = $HighScore
 
 
 func _ready():
@@ -42,6 +43,7 @@ func load_player_ui(level:int, current_exp:int, exp_to_next:int, username:String
 	username_label.text = username
 	coins_label.text = " : "+str(coins)
 	diamonds_label.text = " : "+str(diamonds)
+	high_score.text = "High Score : " + str(GameState.high_score)
 	# Profile picture
 	if ResourceLoader.exists(profile_path):
 		profile_pic.texture = load(profile_path)

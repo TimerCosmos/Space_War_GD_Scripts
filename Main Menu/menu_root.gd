@@ -7,7 +7,8 @@ extends Control
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
-
+func on_leader_boards_pressed():
+	SceneManager.goto_scene("res://Scenes/leader_board.tscn")
 
 func _on_settings_button_pressed():
 	settings_pop_up.visible = true

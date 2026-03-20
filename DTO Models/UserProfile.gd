@@ -19,7 +19,6 @@ var created_at: String
 
 static func from_dict(data: Dictionary) -> UserProfile:
 	var user = UserProfile.new()
-	print(data)
 	user.id = data.get("id", "")
 	user.email = data.get("email", "")
 	user.name = data.get("name", "")

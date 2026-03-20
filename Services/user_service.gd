@@ -200,3 +200,13 @@ static func claim_level_rewards(callback: Callable):
 
 static func get_shop_items(callback: Callable):
 	ApiClient.get_with_auth("/api/v1/shop/items", callback)
+
+# -------------------------------------------------
+# Leaderboard
+# -------------------------------------------------
+
+static func get_leaderboard(callback: Callable):
+	ApiClient.get_with_auth(
+		"/api/v1/leaderboard",
+		callback
+	)

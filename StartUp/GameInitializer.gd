@@ -86,7 +86,7 @@ func _parse_bootstrap(data: Dictionary):
 		var ad = Ad.from_dict(ad_dict)
 		GameState.ad_limits[ad.type] = ad
 
-
+	GameState.high_score = int(data.get("high_score"))
 # ---------------------------
 # UNCLAIMED LEVEL REWARDS
 # ---------------------------

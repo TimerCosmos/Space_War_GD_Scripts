@@ -4,6 +4,7 @@ signal ads_updated
 var selected_ship_data = null
 var selected_drone_data: DroneData
 
+
 enum GarageMode { SHIPS, DRONES	}
 var garage_mode : GarageMode 
 
@@ -19,6 +20,9 @@ var all_enemies : Array[Enemy] = []
 var owned_ship_ids: Array[String] = []
 var owned_drone_ids: Array[String] = []
 var drop_groups = []
+var high_score : int
+var leaderboard_cache: Array = []
+var leaderboard_last_fetch_time: int = 0
 var unclaimed_level_rewards: Array = []
 var ad_limits : Dictionary = {}
 static var offers: Array = []

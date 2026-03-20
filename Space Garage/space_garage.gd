@@ -53,6 +53,7 @@ const DIAMOND_ICON = preload("res://Assets/Images/Diamonds.png")
 @onready var damage_up_value: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Damage Up Value"
 @onready var hit_rate_button: Button = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Rate Button"
 @onready var hit_rate_up_value: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Rate Up Value"
+@onready var drone_count_label: Label = $CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/DroneCountLabel
 
 @onready var hit_points_level_label: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Hit Points Level Label"
 @onready var damage_level_label: Label = $"CanvasLayer/Control/StatsPanel/MarginContainer/GridContainer/Damage Level Label"
@@ -104,6 +105,9 @@ func update_stats_display(data):
 	hit_points.text = "Health: " + str(data.base_health)
 	damage.text = "Damage: " + str(data.base_damage)
 	hit_rate.text = "Hit Rate: " + str(data.base_hit_rate)
+	if mode == GarageMode.SHIPS:
+		drone_count_label.visible = true
+		drone_count_label.text ="Drones: "+  str(data.max_drones)
 
 # -------------------------------------------------
 # Load Preview Item
@@ -792,14 +796,13 @@ func _on_upgrade_done(code, response_text):
 	var json = JSON.parse_string(response_text)
 	if json == null:
 		return
-
+	
 	if not json.get("success", false):
 		return
 
 	# -------------------------
 	# 1️⃣ Update spaceship stats in garage
 	# -------------------------
-
 	var updated_stats = json.get("updated_stats", null)
 	if updated_stats != null:
 		current_item.base_health = int(updated_stats.get("health", current_item.base_health))
@@ -826,9 +829,11 @@ func _on_upgrade_done(code, response_text):
 	# -------------------------
 
 	var owned_ids = json.get("owned_ship_ids", [])
-
-	GameState.owned_ship_ids = owned_ids.map(func(id):
-		return str(id)
+	GameState.owned_ship_ids = Array(
+		owned_ids.map(func(id): return str(id)),
+		TYPE_STRING,
+		"",
+		null
 	)
 
 	# -------------------------
