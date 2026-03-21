@@ -1,6 +1,5 @@
-# Api call is needed to get the player details
-
 extends Node
+
 @onready var exp_ring: TextureProgressBar = $ProfileBlock/ExpWidget/ExpRing
 @onready var level_label: Label = $ProfileBlock/ExpWidget/LevelLabel
 @onready var profile_pic: TextureRect = $ProfileBlock/ProfilePic
@@ -15,8 +14,7 @@ extends Node
 
 
 func _ready():
-	
-	## Should write an API call to get the user data
+
 	load_player_ui(
 		GameState.user.level,
 		GameState.user.exp,
@@ -26,27 +24,36 @@ func _ready():
 		GameState.user.coins,
 		GameState.user.diamonds
 	)
+
 	load_ad_icons()
+
 	GameState.economy_updated.connect(update_currency)
 	GameState.ads_updated.connect(load_ad_icons)
-	AdManager.load_rewarded("COINS")
-	AdManager.load_rewarded("DIAMONDS")
+
+
+# -------------------------------------------------
+# PLAYER UI
+# -------------------------------------------------
 
 func load_player_ui(level:int, current_exp:int, exp_to_next:int, username:String, profile_path:String, coins:int, diamonds:int):
-	# Level number
+
 	level_label.text = str(level)
-	# EXP progress
+
 	exp_ring.max_value = exp_to_next + current_exp
 	exp_ring.value = current_exp
 
-	# Username
 	username_label.text = username
-	coins_label.text = " : "+str(coins)
-	diamonds_label.text = " : "+str(diamonds)
+	coins_label.text = " : " + str(coins)
+	diamonds_label.text = " : " + str(diamonds)
 	high_score.text = "High Score : " + str(GameState.high_score)
-	# Profile picture
+
 	if ResourceLoader.exists(profile_path):
 		profile_pic.texture = load(profile_path)
+
+
+# -------------------------------------------------
+# AD UI
+# -------------------------------------------------
 
 func load_ad_icons():
 
@@ -76,13 +83,24 @@ func load_ad_icons():
 
 		button.disabled = remaining <= 0
 		label.text = str(remaining) + "/" + str(limit)
-		
+
+
+# -------------------------------------------------
+# AD BUTTONS
+# -------------------------------------------------
+
 func watch_gold_coin_ad():
 	AdManager.show_rewarded("coins")
-	
+
+
 func watch_diamond_coin_ad():
 	AdManager.show_rewarded("diamonds")
-	
+
+
+# -------------------------------------------------
+# ECONOMY UPDATE
+# -------------------------------------------------
+
 func update_currency():
 	coins_label.text = str(GameState.user.coins)
 	diamonds_label.text = str(GameState.user.diamonds)

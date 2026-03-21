@@ -3,19 +3,43 @@ extends Node
 var music_player := AudioStreamPlayer.new()
 var sfx_player := AudioStreamPlayer.new()
 var switch_delay := 0.5
-
+var sfx_players := []
+var max_sfx_players := 10
 func _ready():
+
 	process_mode = Node.PROCESS_MODE_ALWAYS
+
 	add_child(music_player)
-	add_child(sfx_player)
 
-func play_sfx(sound: AudioStream):
+	# 🔥 Create pool
+	for i in range(max_sfx_players):
+		var player = AudioStreamPlayer.new()
+		add_child(player)
+		sfx_players.append(player)
 
+func play_sfx(sound: AudioStream, volume : float):
+	
 	if !UserSettingsManager.sfx_enabled:
 		return
 
-	sfx_player.stream = sound
-	sfx_player.play()
+	var player = get_free_sfx_player()
+	if player == null:
+		return
+
+	player.stream = sound
+
+	# 🔥 Apply volume (linear → db)
+	player.volume_db = linear_to_db(volume)
+
+	player.play()
+
+func get_free_sfx_player():
+
+	for p in sfx_players:
+		if !p.playing:
+			return p
+
+	return sfx_players[0]  # fallback (reuse first)
 	
 func play_music():
 

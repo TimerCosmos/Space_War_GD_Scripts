@@ -24,7 +24,7 @@ var _base_hit_rate: float = 0.0
 # ----------------------------
 var runtime_damage: int
 var runtime_fire_rate: float
-
+var bullet_sfx = preload("res://Assets/Sound Tracks/SFX/GunShot.mp3")
 func apply_data(resource_data: DroneData, backend_data):
 	drone_data = resource_data.duplicate(true)
 
@@ -95,7 +95,7 @@ func shoot():
 		return
 
 	var bullet_scene = preload("res://Scenes/Attacks/plasma.tscn")
-
+	
 	var bullet = bullet_scene.instantiate()
 	bullet.can_hit_upgrades = false
 	get_tree().current_scene.add_child(bullet)
@@ -106,7 +106,7 @@ func shoot():
 	var target = global_position + Vector3(0, 0, -100)
 
 	bullet.look_at(target, Vector3.UP)
-
+	AudioManager.play_sfx(bullet_sfx,0.2)
 	bullet.damage = runtime_damage
 
 

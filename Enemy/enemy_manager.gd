@@ -22,7 +22,8 @@ var spawn_rate := 0.05
 
 const FRONT_LIMIT_Z := -25.0
 const BACK_LIMIT_Z := -120.0
-
+var blast_scene = preload("res://Scenes/Enemies/hit_blast.tscn")
+var enemy_death_sfx = preload("res://Assets/Sound Tracks/SFX/monsterGrunt.mp3")
 @export var battlefield_width := 20.0
 
 # ------------------------------------------------
@@ -213,7 +214,8 @@ func check_hit(bullet_pos: Vector3, damage: int) -> bool:
 		if bullet_pos.distance_to(e.position) < 0.7:
 
 			e.hp -= damage
-
+			# 🔥 HIT FLASH
+			#flash_enemy(i)
 			if e.hp <= 0:
 				e.alive = false
 				kill_enemy(i)
@@ -222,21 +224,46 @@ func check_hit(bullet_pos: Vector3, damage: int) -> bool:
 
 	return false
 
+func flash_enemy(i):
 
+	var t = multimesh.get_instance_transform(i)
+
+	# quick scale boost
+	var flash_basis = t.basis.scaled(Vector3.ONE * 1.4)
+
+	t.basis = flash_basis
+	multimesh.set_instance_transform(i, t)
+
+	# revert after short time
+	await get_tree().create_timer(randf_range(0.5,0.6 )).timeout
+
+	# restore normal
+	var normal_basis = t.basis.scaled(Vector3.ONE * 0.7)
+
+	t.basis = normal_basis
+	multimesh.set_instance_transform(i, t)
 # ------------------------------------------------
 # DEATH
 # ------------------------------------------------
-
 func kill_enemy(i):
 
+	var pos = enemies[i].position
+
+	spawn_blast(pos)
+
 	hide_enemy(i)
-
+	AudioManager.play_sfx(enemy_death_sfx, 1)
 	var game = get_tree().get_first_node_in_group("game")
-
 	if game:
 		game.add_score(100)
 
+func spawn_blast(pos: Vector3):
 
+	var blast = blast_scene.instantiate()
+	get_tree().current_scene.add_child(blast)
+
+	blast.global_position = pos
+	
 func hide_enemy(i):
 
 	multimesh.set_instance_transform(

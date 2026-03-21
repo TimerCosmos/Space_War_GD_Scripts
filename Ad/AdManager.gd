@@ -1,31 +1,55 @@
 extends Node
 
-# store ads per type
-var rewarded_ads : Dictionary = {}
+# -------------------------------------------------
+# STATE
+# -------------------------------------------------
 
+var rewarded_ads : Dictionary = {}
 var last_ad_type : String = ""
 
 var reward_listener := OnUserEarnedRewardListener.new()
 
+var ads_initialized := false
+
+
+# -------------------------------------------------
+# READY (NO INIT HERE)
+# -------------------------------------------------
+
 func _ready():
 
-	MobileAds.initialize()
-
+	# Only setup reward listener
 	reward_listener.on_user_earned_reward = func(rewarded_item : RewardedItem):
 
 		print("Reward earned")
 
 		var backend_type = last_ad_type.to_lower()
-
 		request_backend_reward(backend_type)
-
-	# preload ads
-	load_rewarded("coins")
-	load_rewarded("diamonds")
 
 
 # -------------------------------------------------
-# Load rewarded ad
+# INIT ADS (CALL AFTER CONSENT ONLY)
+# -------------------------------------------------
+
+func init_ads():
+
+	if ads_initialized:
+		print("Ads already initialized")
+		return
+
+	print("Initializing Ads (Consent granted)")
+
+	MobileAds.initialize()
+
+	# preload ads AFTER consent
+	load_rewarded("coins")
+	load_rewarded("diamonds")
+
+	ads_initialized = true
+
+
+# -------------------------------------------------
+# LOAD REWARDED AD
 # -------------------------------------------------
 
 func load_rewarded(type:String):
@@ -36,6 +60,9 @@ func load_rewarded(type:String):
 
 	if OS.get_name() == "Android":
 		unit_id = GameState.admob_rewarded[type]
+	else:
+		print("Unsupported platform for ads")
+		return
 
 	var callback := RewardedAdLoadCallback.new()
 
@@ -56,14 +83,21 @@ func load_rewarded(type:String):
 
 		ad.full_screen_content_callback = fullscreen
 
-	RewardedAdLoader.new().load(unit_id, AdRequest.new(), callback)
+	# No Bundle → simple request
+	var request := AdRequest.new()
+
+	RewardedAdLoader.new().load(unit_id, request, callback)
 
 
 # -------------------------------------------------
-# Show rewarded ad
+# SHOW REWARDED AD
 # -------------------------------------------------
 
 func show_rewarded(type:String):
+
+	if not ads_initialized:
+		print("Ads not initialized (no consent yet)")
+		return
 
 	type = type.to_lower()
 
@@ -80,7 +114,7 @@ func show_rewarded(type:String):
 
 
 # -------------------------------------------------
-# Backend reward
+# BACKEND REWARD
 # -------------------------------------------------
 
 func request_backend_reward(type:String):
@@ -125,7 +159,6 @@ func request_backend_reward(type:String):
 
 				GameState.ad_limits[ad.type] = ad
 				GameState.ads_updated.emit()
-
 
 			print("Reward granted")
 	)

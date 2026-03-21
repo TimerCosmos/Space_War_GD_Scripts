@@ -28,7 +28,6 @@ func populate_rewards():
 
 
 func _on_claim_pressed():
-
 	UserService.claim_level_rewards(_on_claim_response)
 
 

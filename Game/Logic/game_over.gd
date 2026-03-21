@@ -30,6 +30,8 @@ func show_game_over(final_score: int, time_survived: int):
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 	final_score_label.text = "Score: " + str(final_score)
+	if final_score > GameState.high_score:
+		GameState.high_score = final_score
 
 	# Reset UI while loading
 	coins_label.text = "..."

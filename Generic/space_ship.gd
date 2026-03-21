@@ -29,6 +29,7 @@ var bonus_damage: int = 0
 var bonus_health: int = 0
 
 var bullet_sfx = preload("res://Assets/Sound Tracks/SFX/GunShot.mp3")
+
 # --------------------------------
 # Battlefield movement limits
 # --------------------------------
@@ -207,7 +208,7 @@ func shoot():
 		bullet.global_transform = muzzle.global_transform
 
 		bullet.damage = runtime_damage
-	AudioManager.play_sfx(bullet_sfx)
+	AudioManager.play_sfx(bullet_sfx, 0.2)
 
 # -------------------------------------------------
 # Drone System
