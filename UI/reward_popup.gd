@@ -1,7 +1,7 @@
-extends Control
+extends CanvasLayer
 
-@onready var reward_list = $Panel/VBoxContainer/RewardList
-@onready var claim_button = $Panel/VBoxContainer/ClaimButton
+@onready var reward_list = $Control/Panel/VBoxContainer/RewardList
+@onready var claim_button = $Control/Panel/VBoxContainer/ClaimButton
 
 
 func _ready():

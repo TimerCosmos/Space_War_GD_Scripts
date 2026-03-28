@@ -81,7 +81,6 @@ func apply_data(resource_data: ShipData, backend_data: Spaceship, player_data: D
 # -------------------------------------------------
 
 func _ready():
-
 	add_to_group("player")
 
 	setup_movement_bounds()

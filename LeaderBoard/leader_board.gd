@@ -4,7 +4,7 @@ extends Control
 # CONFIG
 # ----------------------------------
 const ROW_HEIGHT := 40
-const LIMIT := 10   # items per page
+const LIMIT := 50  # items per page
 
 var current_page := 0
 var total := 0
@@ -77,16 +77,13 @@ func render():
 	for child in container.get_children():
 		child.queue_free()
 
-	var start = current_page * LIMIT
-	var end = min(start + LIMIT, leaderboard_data.size())
+	# Show top 100 directly
+	var end = min(LIMIT, leaderboard_data.size())
 
-	for i in range(start, end):
+	for i in range(0, end):
 		var entry = leaderboard_data[i]
 		var row = create_row(entry)
-		container.add_child(create_row(entry))
-
-	update_pagination_buttons()
-
+		container.add_child(row)
 # ----------------------------------
 # CREATE ROW (NO EXTRA SCENE)
 # ----------------------------------

@@ -8,7 +8,6 @@ class SwarmEnemy:
 	var alive := true
 	var chaos_offset: float
 
-# 🔥 Reduced for mobile safety
 @export var max_enemies := 1000
 @export var enemy_texture: Texture2D
 const ENEMY_TILT := deg_to_rad(-40.0)
@@ -20,10 +19,16 @@ var multimesh := MultiMesh.new()
 var spawn_timer := 0.0
 var spawn_rate := 0.05
 
+# ⏱ GAME TIMER
+var game_time := 0.0
+
 const FRONT_LIMIT_Z := -25.0
 const BACK_LIMIT_Z := -120.0
+
+# ✅ SAME SCENE for hit + death
 var blast_scene = preload("res://Scenes/Enemies/hit_blast.tscn")
 var enemy_death_sfx = preload("res://Assets/Sound Tracks/SFX/monsterGrunt.mp3")
+
 @export var battlefield_width := 20.0
 
 # ------------------------------------------------
@@ -34,16 +39,12 @@ func _ready():
 
 	add_to_group("enemy_manager")
 
-	# -----------------------------
-	# BILLBOARD MESH SETUP
-	# -----------------------------
 	var quad := QuadMesh.new()
 	quad.size = Vector2(4, 3)
 
 	var mat := StandardMaterial3D.new()
 	mat.albedo_texture = enemy_texture
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	#mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 
 	quad.material = mat
@@ -54,12 +55,10 @@ func _ready():
 
 	$MultiMeshInstance3D.multimesh = multimesh
 
-	# hide all initially
 	for i in range(max_enemies):
 		hide_enemy(i)
 
 	prefill_battlefield()
-
 
 # ------------------------------------------------
 # PREFILL
@@ -68,7 +67,7 @@ func _ready():
 func prefill_battlefield():
 
 	var rows := 40
-	var columns := 25   # slightly reduced
+	var columns := 25
 
 	var z_step = (BACK_LIMIT_Z - FRONT_LIMIT_Z) / rows
 	var x_step = battlefield_width / columns
@@ -89,12 +88,13 @@ func prefill_battlefield():
 			if dto != null:
 				spawn_enemy(pos, dto)
 
-
 # ------------------------------------------------
 # MAIN LOOP
 # ------------------------------------------------
 
 func _process(delta):
+
+	game_time += delta
 
 	spawn_timer += delta
 
@@ -104,6 +104,34 @@ func _process(delta):
 
 	update_enemies(delta)
 
+# ------------------------------------------------
+# HP CURVE SYSTEM
+# ------------------------------------------------
+
+func get_enemy_hp(base_hp: float) -> int:
+
+	var t = game_time
+
+	# 0 → 45 sec → fixed HP
+	if t <= 45.0:
+		return 100
+
+	# 45 sec → 2m15s (135 sec) → 50%
+	elif t <= 135.0:
+		return int(base_hp * 0.5)
+
+	# 2m15s → 6 min → normal
+	elif t <= 360.0:
+		return int(base_hp)
+
+	# 6 min+ → scaling
+	else:
+		var extra_time = t - 360.0
+
+		# gradual increase (5% every 30 sec)
+		var multiplier = 1.0 + (extra_time / 30.0) * 0.05
+
+		return int(base_hp * multiplier)
 
 # ------------------------------------------------
 # SPAWN
@@ -115,7 +143,6 @@ func spawn_random_enemy():
 		return
 
 	var dto = get_random_enemy()
-
 	if dto == null:
 		return
 
@@ -127,33 +154,51 @@ func spawn_random_enemy():
 
 	spawn_enemy(pos, dto)
 
-
 func spawn_enemy(pos: Vector3, dto):
 
+	# 🔁 Try to reuse dead enemy
+	for i in range(enemies.size()):
+		if !enemies[i].alive:
+
+			var e = enemies[i]
+
+			e.alive = true
+			e.position = pos
+			e.velocity = Vector3(0, 0, dto.speed if dto.speed != null else 4)
+			e.hp = get_enemy_hp(dto.base_health)
+			e.damage = dto.collision_damage
+			e.chaos_offset = randf() * 10
+
+			update_multimesh_instance(i, e)
+			return
+
+	# 🆕 If no dead slot, create new (only if under limit)
 	if enemies.size() >= max_enemies:
 		return
 
 	var e = SwarmEnemy.new()
 
+	e.alive = true
 	e.position = pos
 	e.velocity = Vector3(0, 0, dto.speed if dto.speed != null else 4)
-	e.hp = dto.base_health
+	e.hp = get_enemy_hp(dto.base_health)
 	e.damage = dto.collision_damage
 	e.chaos_offset = randf() * 10
 
 	enemies.append(e)
 
 	var index = enemies.size() - 1
+	update_multimesh_instance(index, e)
 
-	var scale = randf_range(1, 1.4)   # 🔥 slightly controlled
+func update_multimesh_instance(i, e):
+
+	var scale = randf_range(1, 1.4)
 
 	var t := Transform3D()
 	t.origin = e.position
 	t.basis = Basis().scaled(Vector3.ONE * scale)
 
-	multimesh.set_instance_transform(index, t)
-
-
+	multimesh.set_instance_transform(i, t)
 # ------------------------------------------------
 # UPDATE
 # ------------------------------------------------
@@ -167,17 +212,13 @@ func update_enemies(delta):
 		if !e.alive:
 			continue
 
-		# forward
 		e.position += e.velocity * delta
 
-		# swarm chaos
 		var side = sin(Time.get_ticks_msec() * 0.002 + e.chaos_offset)
 		e.position.x += side * delta * 2
 
-		# clamp inside battlefield
 		e.position.x = clamp(e.position.x, -battlefield_width/2, battlefield_width/2)
 
-		# damage player
 		if player and e.position.distance_to(player.global_position) < 1.5:
 
 			player.take_damage(e.damage)
@@ -188,15 +229,13 @@ func update_enemies(delta):
 
 		var depth_scale = clamp(2.0 - (abs(e.position.z) / 120.0), 1.0, 2.0)
 
-		var basis = Basis()
-		basis = basis.scaled(Vector3.ONE * depth_scale)
+		var basis = Basis().scaled(Vector3.ONE * depth_scale)
 
 		var t := Transform3D()
 		t.origin = e.position
 		t.basis = basis
 
 		multimesh.set_instance_transform(i, t)
-
 
 # ------------------------------------------------
 # BULLET HIT
@@ -214,8 +253,12 @@ func check_hit(bullet_pos: Vector3, damage: int) -> bool:
 		if bullet_pos.distance_to(e.position) < 0.7:
 
 			e.hp -= damage
-			# 🔥 HIT FLASH
-			#flash_enemy(i)
+
+			# ⚡ hit feedback
+			flash_enemy(i)
+			spawn_blast(e.position, 0.4)
+
+			# 💀 death
 			if e.hp <= 0:
 				e.alive = false
 				kill_enemy(i)
@@ -224,53 +267,78 @@ func check_hit(bullet_pos: Vector3, damage: int) -> bool:
 
 	return false
 
+# ------------------------------------------------
+# HIT FLASH
+# ------------------------------------------------
+
 func flash_enemy(i):
 
+	if i >= enemies.size():
+		return
+
+	var e = enemies[i]
+	if !e.alive:
+		return
+
 	var t = multimesh.get_instance_transform(i)
+	var original_basis = t.basis
 
-	# quick scale boost
-	var flash_basis = t.basis.scaled(Vector3.ONE * 1.4)
-
-	t.basis = flash_basis
+	t.basis = original_basis.scaled(Vector3.ONE * 1.25)
 	multimesh.set_instance_transform(i, t)
 
-	# revert after short time
-	await get_tree().create_timer(randf_range(0.5,0.6 )).timeout
+	await get_tree().create_timer(0.08).timeout
 
-	# restore normal
-	var normal_basis = t.basis.scaled(Vector3.ONE * 0.7)
+	if i >= enemies.size():
+		return
 
-	t.basis = normal_basis
+	if !enemies[i].alive:
+		return
+
+	t = multimesh.get_instance_transform(i)
+	t.basis = original_basis
 	multimesh.set_instance_transform(i, t)
+
 # ------------------------------------------------
 # DEATH
 # ------------------------------------------------
+
 func kill_enemy(i):
 
 	var pos = enemies[i].position
 
-	spawn_blast(pos)
+	spawn_blast(pos, 1.0)
 
+	enemies[i].alive = false
 	hide_enemy(i)
+
 	AudioManager.play_sfx(enemy_death_sfx, 1)
+
 	var game = get_tree().get_first_node_in_group("game")
 	if game:
 		game.add_score(100)
 
-func spawn_blast(pos: Vector3):
+# ------------------------------------------------
+# BLAST (shared)
+# ------------------------------------------------
+
+func spawn_blast(pos: Vector3, scale: float = 1.0):
 
 	var blast = blast_scene.instantiate()
 	get_tree().current_scene.add_child(blast)
 
 	blast.global_position = pos
-	
+	blast.scale = Vector3.ONE * scale
+
+# ------------------------------------------------
+# HIDE
+# ------------------------------------------------
+
 func hide_enemy(i):
 
-	multimesh.set_instance_transform(
-		i,
-		Transform3D(Basis(), Vector3(0,-9999,0))
-	)
+	var t := Transform3D()
+	t.origin = Vector3(0, -9999, 0)
 
+	multimesh.set_instance_transform(i, t)
 
 # ------------------------------------------------
 # BACKEND

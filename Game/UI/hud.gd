@@ -3,9 +3,9 @@
 extends Control
 
 @onready var health_bar: ProgressBar = $HealthBar
-@onready var score_label: Label = $VBoxContainer/ScoreLabel
-@onready var damage: Label = $VBoxContainer/Damage
-@onready var drone_count: Label = $VBoxContainer/DroneCount
+@onready var score_label: Label = $PanelContainer/MarginContainer/VBoxContainer/ScoreLabel
+@onready var damage: Label = $PanelContainer/MarginContainer/VBoxContainer/Damage
+@onready var drone_count: Label = $PanelContainer/MarginContainer/VBoxContainer/DroneCount
 
 var DroneCount: int = 0
 

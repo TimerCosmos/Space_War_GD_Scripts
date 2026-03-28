@@ -210,3 +210,14 @@ static func get_leaderboard(callback: Callable):
 		"/api/v1/leaderboard",
 		callback
 	)
+	
+static func update_name(name: String, callback: Callable):
+	var body = {
+		"username": name
+	}
+
+	ApiClient.patch_with_auth(
+		"/api/v1/auth/player/name",
+		body,
+		callback
+	)

@@ -11,12 +11,16 @@ var upgrade_value := 1
 @onready var label: Label3D = $Label3D
 @onready var energy_field: MeshInstance3D = $EnergyField
 
+var simple_material = preload("res://Styles/Materials/blue.tres")
+var fancy_material = preload("res://Styles/Materials/blue_shader.tres")
+
 # Frame parts
 @onready var left_wall: MeshInstance3D = $LeftWall
 @onready var right_wall: MeshInstance3D = $RightWall
 @onready var bottom_wall: MeshInstance3D = $BottomWall
 
 func _ready():
+	apply_graphics_settings()
 	add_to_group("upgrade")
 	health = max_health
 
@@ -26,7 +30,14 @@ func _ready():
 
 	update_health_bar()
 
+func apply_graphics_settings():
+	var mesh_instance = energy_field as MeshInstance3D
 
+	if GraphicsManager.graphics_mode == "LOW":
+		mesh_instance.set_surface_override_material(0, simple_material)
+	else:
+		mesh_instance.set_surface_override_material(0, fancy_material)
+		
 func _physics_process(delta):
 
 	# Conveyor downward movement

@@ -1,6 +1,7 @@
 extends Node
 signal economy_updated
 signal ads_updated
+signal user_updated
 var selected_ship_data = null
 var selected_drone_data: DroneData
 

@@ -24,7 +24,9 @@ extends Node3D
 @onready var dimmer: ColorRect = $CanvasLayer/Dimmer
 @onready var reveal_layer: Control = $CanvasLayer/RevealLayer
 @onready var reveal_label: Label = $CanvasLayer/RevealLayer/RevealLabel
-
+@onready var no_tickets_container: CenterContainer = $CanvasLayer/Control/NoTicketsContainer
+@onready var count_down_label: Label = $CanvasLayer/Control/NoTicketsContainer/VBoxContainer/CountDownLabel
+var countdown_active := false
 # -----------------------------------
 
 # STATE
@@ -341,6 +343,12 @@ func clear_grid():
 func update_remaining():
 	remaining_label.text = "Remaining Tickets: " + str(available_tickets)
 
+	if available_tickets <= 0:
+		if not countdown_active:
+			start_countdown()
+	else:
+		stop_countdown()
+
 func show_loading(value: bool):
 	loading_label.visible = value
 
@@ -352,3 +360,33 @@ func show_loading(value: bool):
 
 func _on_exit_pressed():
 	SceneManager.goto_scene("res://Scenes/main_menu.tscn")
+
+func start_countdown():
+	countdown_active = true
+	no_tickets_container.visible = true
+
+	while countdown_active:
+		var seconds = get_seconds_until_midnight_ist()
+
+		var h = seconds / 3600
+		var m = (seconds % 3600) / 60
+		var s = seconds % 60
+
+		count_down_label.text = "New tickets will be issued in: %02d:%02d:%02d" % [h, m, s]
+
+		await get_tree().create_timer(1.0).timeout
+		
+func get_seconds_until_midnight_ist() -> int:
+	var now_utc = int(Time.get_unix_time_from_system())
+
+	# IST offset = +5:30 → 19800 seconds
+	var ist_time = now_utc + 19800
+
+	var seconds_in_day = 86400
+	var seconds_today = ist_time % seconds_in_day
+
+	return seconds_in_day - seconds_today
+
+func stop_countdown():
+	countdown_active = false
+	no_tickets_container.visible = false

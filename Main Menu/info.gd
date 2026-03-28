@@ -15,38 +15,31 @@ extends Node
 
 func _ready():
 
-	load_player_ui(
-		GameState.user.level,
-		GameState.user.exp,
-		GameState.user.exp_to_next_level,
-		GameState.user.name,
-		"res://assets/profile.png",
-		GameState.user.coins,
-		GameState.user.diamonds
-	)
+	load_player_ui(	)
 
 	load_ad_icons()
 
 	GameState.economy_updated.connect(update_currency)
 	GameState.ads_updated.connect(load_ad_icons)
-
+	GameState.user_updated.connect(load_player_ui)
 
 # -------------------------------------------------
 # PLAYER UI
 # -------------------------------------------------
 
-func load_player_ui(level:int, current_exp:int, exp_to_next:int, username:String, profile_path:String, coins:int, diamonds:int):
+func load_player_ui():
 
-	level_label.text = str(level)
+	level_label.text = str(GameState.user.level)
 
-	exp_ring.max_value = exp_to_next + current_exp
-	exp_ring.value = current_exp
+	exp_ring.max_value = GameState.user.exp_to_next_level + GameState.user.exp
+	exp_ring.value = GameState.user.exp
 
-	username_label.text = username
-	coins_label.text = " : " + str(coins)
-	diamonds_label.text = " : " + str(diamonds)
+	username_label.text = GameState.user.name
+	coins_label.text = " : " + str(GameState.user.coins)
+	diamonds_label.text = " : " + str(GameState.user.diamonds)
 	high_score.text = "High Score : " + str(GameState.high_score)
 
+	var profile_path = "res://assets/profile.png"
 	if ResourceLoader.exists(profile_path):
 		profile_pic.texture = load(profile_path)
 

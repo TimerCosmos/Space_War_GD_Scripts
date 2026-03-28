@@ -4,6 +4,8 @@ extends Control
 @onready var shop: Button = $MarginContainer/MainMenuContainer/ShopsAndOffers/Shop
 @onready var settings_pop_up: PopupPanel = $SettingsPopUp
 @onready var settings: Button = $MarginContainer/MainMenuContainer/Settings/Settings
+@onready var edit_name_popup: PopupPanel = $"../EditNamePopup"
+
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
@@ -24,3 +26,6 @@ func _on_dimmer_gui_input(event):
 
 func _on_shop_pressed():
 	SceneManager.goto_scene("res://Scenes/Shop/shop.tscn")
+
+func _on_edit_name_pressed():
+	edit_name_popup.visible = true

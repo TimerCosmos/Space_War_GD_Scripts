@@ -1,8 +1,8 @@
 extends Node
 
-#const BASE_URL := "https://spacewar-backend-869284059337.asia-south1.run.app"
-const BASE_URL := "http://127.0.0.1:8000"
-#const BASE_URL = "http://192.168.0.9:5000"
+const BASE_URL := "https://spacewar-backend-869284059337.asia-south1.run.app"
+#const BASE_URL := "http://127.0.0.1:8000"
+#const BASE_URL = "http://192.168.0.4:5000"
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 # -------------------------------------------------

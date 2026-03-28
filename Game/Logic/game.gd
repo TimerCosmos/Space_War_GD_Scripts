@@ -7,7 +7,7 @@ extends Node3D
 @onready var ship_pivot: Node3D = $ShipPivot
 @onready var enemy_manager = $EnemyManager
 @onready var game_over: Control = $CanvasLayer/GameOver
-@onready var damage: Label = $CanvasLayer/HUD/VBoxContainer/Damage
+@onready var damage: Label = $CanvasLayer/HUD/PanelContainer/MarginContainer/VBoxContainer/Damage
 
 var ship_instance: SpaceShip = null
 
